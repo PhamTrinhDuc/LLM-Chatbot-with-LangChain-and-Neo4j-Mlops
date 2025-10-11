@@ -14,6 +14,9 @@ __pycache__/
 *.so
 
 # Custom
+.env.prod 
+.env.dev
+notebook
 
 # Distribution / packaging
 .Python

@@ -1,1 +1,5 @@
 ngrok==1.4.0
+neo4j==5.14.1
+retry==0.9.2
+loguru==0.7.3
+python-dotenv==1.1.1
