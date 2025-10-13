@@ -49,7 +49,11 @@ def _set_uniqueness_constraints(tx,node):
 
 @retry(tries=10, delay=5)
 def load_hospital_graph_from_csv() -> None:
-  """Load structured hospital CSV data following a specific ontology into Neo4j"""
+  """
+  Load structured hospital CSV data into Neo4j following a specific ontology:
+  - Only include the id in MERGE.
+  - Put all other properties in ON CREATE and ON MATCH.
+  """
 
   # =====================================  LOADING NODES ================================================
   logger.info("Setting uniqueness constraints on nodes") 
