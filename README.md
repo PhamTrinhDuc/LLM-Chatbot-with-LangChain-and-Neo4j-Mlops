@@ -214,3 +214,60 @@ Click the "Let's go" button below "Try the new hosted Browser". You will see the
 ![neo4j-instance](images/neo4j-instance.png)
 
 ### 2.3 ETL Data CSV To Neo4j
+
+This section describes how structured CSV files are loaded into the Neo4j graph database, how to run the ETL script included in this repository, how to validate the import, and some troubleshooting tips.
+
+#### 2.3.1 What the ETL does
+
+The ETL implemented in `backend/etl_neo4j/script.py` performs the following tasks:
+
+- Creates uniqueness constraints for each node label (Hospital, Payer, Physician, Patient, Visit, Review).
+- Loads nodes from CSV files into the corresponding node labels, mapping CSV columns to node properties.
+- Loads relationships between nodes (AT, WRITES, HAS, TREATS, COVERED_BY, EMPLOYS) using the visit and review CSVs as the relationship source.
+- Sets relationship properties where available (for example, `covered_by.billing_amount` and `covered_by.service_date`).
+
+The CSV file paths are configured through environment variables in the `.env.dev` file (example names shown in `backend/etl_neo4j/script.py`). The ETL uses Neo4j's `LOAD CSV` cypher command and is resilient with simple retry logic around connectivity.
+
+#### 2.3.2 How to run the ETL
+
+1. Ensure a Neo4j instance is running and accessible. The project includes a sample docker-compose setup (see `neo4j.yml` or your local docker compose file).
+2. Create a `.env.dev` file (or update it) at the repository root containing the following environment variables:
+```
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=yourpassword
+GRAPHDB_NAME=neo4j
+HOSPITALS_CSV_PATH=file:///path/to/hospitals.csv
+PAYERS_CSV_PATH=file:///path/to/payers.csv
+PHYSICIANS_CSV_PATH=file:///path/to/physicians.csv
+PATIENTS_CSV_PATH=file:///path/to/patients.csv
+VISITS_CSV_PATH=file:///path/to/visits.csv
+REVIEWS_CSV_PATH=file:///path/to/reviews.csv
+```
+Notes:
+- The `LOAD CSV` Cypher used by the script expects the CSV files to be accessible from the Neo4j server process. When running Neo4j in Docker, use `file:///` paths that refer to files inside the Neo4j container import directory (by default `/var/lib/neo4j/import`) or mount your local data directory to that path.
+
+3. From the repository root run the ETL script:
+```bash
+python3 backend/etl_neo4j/script.py
+```
+The script performs a lightweight connectivity check first and then proceeds to create constraints, load nodes and relationships. Logging is emitted to the console. If you prefer, you can run the script inside the same container/network as Neo4j so the `file:///` paths resolve correctly.
+
+#### 2.3.3 Expected result and quick verification
+
+- After a successful import you should be able to open the Neo4j Browser (http://localhost:7474 by default)
+![alt text](images/etl-sucess.png)
+- Run Cypher queries to inspect nodes and relationships. Example queries:
+```
+MATCH (h:Hospital) RETURN count(h);
+MATCH (p:Physician) RETURN p.name LIMIT 10;
+MATCH (v:Visit)-[:AT]->(h:Hospital) RETURN v.id, h.name LIMIT 10;
+```
+The repository includes a simple automated test `tests/neo4j_test.py` that compares a basic count computed from the original `data/english/visits.csv` against the number of physicians employed by a hospital in Neo4j. To run that test locally (requires the test environment variables set in `.env.dev`):
+```bash
+python3 tests/neo4j_test.py
+```
+What the test checks:
+- It computes the number of distinct `physician_id` values in `data/english/visits.csv` for `hospital_id == 14`.
+- It runs a Cypher query to count distinct `Physician` nodes that the `Hospital` node with `id=14` `EMPLOYS`.
+- The test asserts the two counts are equal and prints the result.
