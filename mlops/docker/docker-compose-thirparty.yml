@@ -33,11 +33,31 @@ services:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
 
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/app/redis.conf:ro
+    command: ["redis-server", "/app/redis.conf"]
+    environment:
+      - REDIS_PASSWORD=super_secure_password
+
 volumes:
   neo4j_data:
+    name: neo4j_data
   neo4j_logs:
+    name: neo4j_logs
   neo4j_import:
+    name: neo4j_import
   neo4j_plugins:
+    name: neo4j_plugins
   jenkins_home:
+  redis_data:
+    name: redis_data
+
 
 # a9b74df60c52428cb2d550471c05d733
