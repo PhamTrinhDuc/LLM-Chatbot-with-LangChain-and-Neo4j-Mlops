@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import asyncio
 from datetime import timedelta
 from contextvars import ContextVar
 from loguru import logger
@@ -8,7 +9,7 @@ from loguru import logger
 # ContextVar để lưu trace_id theo request
 trace_id_ctx: ContextVar[str] = ContextVar("trace_id", default="none")
 
-def json_serializer(record):
+def _json_serializer(record):
   """Chuyển log record thành JSON theo format mong muốn"""
   # Lấy trace_id từ context (an toàn)
   try:
@@ -45,7 +46,7 @@ def create_logger():
   if env == "production":
     def json_sink(message):
       # message.record chứa thông tin log record
-      json_output = json_serializer(message.record)
+      json_output = _json_serializer(message.record)
       sys.stdout.write(json_output)
       sys.stdout.flush()
     
@@ -79,3 +80,39 @@ def create_logger():
 
     patched_logger = logger.patch(add_trace_id)
     return patched_logger
+  
+
+def format_output(response: dict) -> dict[str, str]:
+  tool = response["intermediate_steps"][0][0].tool
+  if tool == "Graph": 
+    context = response["intermediate_steps"][0][1]["generated_cypher"]
+  elif tool == "Experiences":
+    context = response["intermediate_steps"][0][1]["context"]
+  else:
+    context = None
+
+  result = response["intermediate_steps"][0][1]["result"]
+
+  return {
+    "tool": tool, 
+    "answer": result, 
+    "context": context
+  }
+
+
+def async_retry(max_retries: int = 3, delay: int = 1):
+  def decorator(func):
+    async def wrapper(*args, **kwargs):
+      for attempt in range(1, max_retries + 1):
+          try:
+              result = await func(*args, **kwargs)
+              return result
+          except Exception as e:
+              print(f"Attempt {attempt} failed: {str(e)}")
+              await asyncio.sleep(delay)
+
+      raise ValueError(f"Failed after {max_retries} attempts")
+
+    return wrapper
+
+  return decorator
