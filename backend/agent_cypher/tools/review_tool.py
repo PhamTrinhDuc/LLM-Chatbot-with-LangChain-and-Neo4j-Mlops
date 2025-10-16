@@ -27,10 +27,14 @@ class ReviewTool(BaseTool):
     class Config:
       extra = "allow" # Cho phép tạo thuộc tính mới sau khi init
         
-    def __init__(self):
-        """Initialize the ReviewTool with a HospitalReviewChain instance."""
-        super().__init__()
-        self.review_chain = HospitalReviewChain()
+    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str):
+      """Initialize the ReviewTool with a HospitalReviewChain instance."""
+      super().__init__()
+      self.review_chain = HospitalReviewChain(
+          neo4j_uri=neo4j_uri, 
+          neo4j_user=neo4j_user, 
+          neo4j_pasword=neo4j_password
+      )
     
     def _run(self, query: str) -> dict[str, any]:
         """
