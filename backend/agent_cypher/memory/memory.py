@@ -1,22 +1,15 @@
 
 import os
 import sys
-import json
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from datetime import datetime
-from typing import Dict
 from redis import Redis, ConnectionError
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain.memory import ConversationBufferMemory
-from models.coversation_his import ConversationHistory
-from dotenv import load_dotenv
-
-load_dotenv(".env.dev")
-REDIS_URL = os.getenv("REDIS_URL")
-
+from models.coversation_his import Conversation, Message
 
 class MemoryPersistenceAgent: 
   def __init__(self, 
@@ -32,10 +25,10 @@ class MemoryPersistenceAgent:
     self.session_id = session_id or f"session_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     # PostgreSQL for permanent storage
-    engine = create_engine(url=db_url)
+    self.engine = create_engine(url=db_url)
     Base = declarative_base()
     Base.metadata.create_all(self.engine)
-    Session = sessionmaker(bind=engine)
+    Session = sessionmaker(bind=self.engine)
     self.db_session = Session()
 
     # Redis for fast access
@@ -58,50 +51,83 @@ class MemoryPersistenceAgent:
     )
     return memory
   
-  def _save_to_db(self, message_type: str, content: str, metadata: Dict=None): 
-    """Sync message to PostgreSQL"""
-    conversation = ConversationHistory(
-      session_id=self.session_id, 
-      user_id=self.user_id, 
-      message_type=message_type, 
-      content=content, 
-      metadata=json.dumps(metadata or {})
-    )
+  def _save_to_db(self, message_type: str, content: str, title: str = None):
+    """Sync message to PostgreSQL using Conversation and Message models"""
+    # Tìm hoặc tạo Conversation
+    conversation = self.db_session.query(Conversation).filter_by(session_id=self.session_id).first()
+    if not conversation:
+        conversation = Conversation(
+            user_id=self.user_id,
+            session_id=self.session_id,
+            title=title,
+            is_active=True
+        )
+        self.db_session.add(conversation)
+        self.db_session.commit()  # Để lấy conversation.id
 
-    self.db_session.add(conversation)
+    # Tạo Message mới
+    message = Message(
+        conversation_id=conversation.id,
+        message_type=message_type,
+        content=content
+    )
+    self.db_session.add(message)
     self.db_session.commit()
   
   def _load_from_db(self): 
-    """Load conversation history DB to Redis memory"""
+    """Load conversation history from DB to Redis memory"""
+    # Kiểm tra nếu Redis key không có TTL (tức là chưa load từ DB)
     if self.redis_client.ttl(name=self.session_id) == -1:
-      messages = self.db_session.query(ConversationHistory).filter_by(
-            session_id=self.session_id
-        ).order_by(ConversationHistory.timestamp).all()
+      # Tìm conversation theo session_id
+      conversation = self.db_session.query(Conversation).filter_by(
+          session_id=self.session_id
+      ).first()
+      
+      if conversation:
+        # Lấy tất cả messages của conversation này, sắp xếp theo thời gian
+        messages = self.db_session.query(Message).filter_by(
+            conversation_id=conversation.id
+        ).order_by(Message.created_at).all()
         
-      for msg in messages:
-        if msg.message_type == 'human':
-            self.message_history.add_user_message(msg.content)
-        elif msg.message_type == 'ai':
-            self.message_history.add_ai_message(msg.content)
-    
+        # Load messages vào Redis memory
+        for msg in messages:
+          if msg.message_type == 'human':
+              self.message_history.add_user_message(msg.content)
+          elif msg.message_type == 'ai':
+              self.message_history.add_ai_message(msg.content)
 
   def cleanup_old_sessions(self, days: int = 30):
     """Delete sessions older than X days"""
     from datetime import timedelta
     cutoff_date = datetime.utcnow() - timedelta(days=days)
     
-    self.db_session.query(ConversationHistory).filter(
-        ConversationHistory.timestamp < cutoff_date
+    # Xóa các conversations cũ hơn X ngày
+    old_conversations = self.db_session.query(Conversation).filter(
+        Conversation.created_at < cutoff_date
+    ).all()
+    
+    # Xóa messages trước (do foreign key constraint)
+    for conversation in old_conversations:
+      self.db_session.query(Message).filter_by(
+          conversation_id=conversation.id
+      ).delete()
+    
+    # Sau đó xóa conversations
+    self.db_session.query(Conversation).filter(
+        Conversation.created_at < cutoff_date
     ).delete()
+    
     self.db_session.commit()
+    print(f"Cleaned up {len(old_conversations)} old conversations older than {days} days")
 
 
 if __name__ == "__main__": 
-  memory_agent = MemoryPersistenceAgent(user_id=1)
-  # memory_manager = memory_agent.memory
+  from dotenv import load_dotenv
 
-  # memory_manager.chat_memory.add_message(HumanMessage(content="Hello"))
-  # memory_manager.chat_memory.add_message(AIMessage(content="Hi, how can I help?"))
+  load_dotenv('.env.dev')
 
-  # print(memory_manager.load_memory_variables({}))
+  memory_agent = MemoryPersistenceAgent(user_id=1, session_id="session_user_1", 
+                                        redis_url=os.getenv("REDIS_URL"), 
+                                        db_url=os.getenv("DATABASE_URL"))
+  print(memory_agent.get_memory().load_memory_variables({}))
   

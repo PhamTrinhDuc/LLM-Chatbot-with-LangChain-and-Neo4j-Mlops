@@ -1,16 +1,12 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from dotenv import load_dotenv
 from langchain.chains.retrieval_qa.base import RetrievalQA
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import Neo4jVector
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from utils.config import AppConfig
-
-load_dotenv(".env.dev")
-
 
 class HospitalReviewChain:
     """
@@ -46,8 +42,11 @@ class HospitalReviewChain:
         "hospital_name",
     ]
     
-    def __init__(self):
+    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_pasword: str):
         """Initialize the HospitalReviewChain."""
+        self.neo4j_uri = neo4j_uri
+        self.neo4j_user = neo4j_user
+        self.neo4j_password = neo4j_pasword
         self._vector_index = None
         self._review_chain = None
     
@@ -57,9 +56,9 @@ class HospitalReviewChain:
         if self._vector_index is None:
           self._vector_index = Neo4jVector.from_existing_graph(
             embedding=OpenAIEmbeddings(model=AppConfig.embedding_model),
-            url=os.getenv("NEO4J_URI"),
-            username=os.getenv("NEO4J_USER"),
-            password=os.getenv("NEO4J_PASSWORD"),
+            url=self.neo4j_uri,
+            username=self.neo4j_user,
+            password=self.neo4j_password,
             index_name="reviews",
             node_label="Review",
             text_node_properties=self.TEXT_NODE_PROPERTIES,
@@ -139,7 +138,11 @@ class HospitalReviewChain:
 
 if __name__ == "__main__": 
     # Test with class instance
-    chain = HospitalReviewChain()
+    chain = HospitalReviewChain(
+        neo4j_uri=os.getenv("NEO4J_URI"), 
+        neo4j_user=os.getenv("NEO4J_USER"), 
+        neo4j_pasword=os.getenv("NEO4j_PASSWORD")
+    )
     query = "Bệnh nhân nói gì về hiệu quả của bệnh viện?"
     answer, context = chain.invoke(query=query)
     print(f"Answer: {answer}")

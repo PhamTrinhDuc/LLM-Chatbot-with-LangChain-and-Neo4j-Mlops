@@ -1,16 +1,12 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from dotenv import load_dotenv
 from langchain.prompts import PromptTemplate
 from langchain_community.graphs import Neo4jGraph
 from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
 from langchain_openai import ChatOpenAI
 
 from utils.config import AppConfig
-
-load_dotenv(".env.dev")
-
 
 class HospitalCypherChain:
     """
@@ -141,8 +137,11 @@ class HospitalCypherChain:
     You need to answer in the user's language: {language}
     """
     
-    def __init__(self):
+    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_pasword: str):
         """Initialize the HospitalCypherChain."""
+        self.neo4j_uri = neo4j_uri
+        self.neo4j_user = neo4j_user
+        self.neo4j_password = neo4j_pasword
         self._graph = None
         self._cypher_chain = None
     
@@ -151,9 +150,9 @@ class HospitalCypherChain:
         """Lazy initialization of Neo4j graph."""
         if self._graph is None:
             self._graph = Neo4jGraph(
-                url=os.getenv("NEO4J_URI"),
-                username=os.getenv("NEO4J_USER"),
-                password=os.getenv("NEO4J_PASSWORD"),
+                url=self.neo4j_uri,
+                username=self.neo4j_user,
+                password=self.neo4j_password,
                 enhanced_schema=True
             )
             self._graph.refresh_schema()
@@ -239,7 +238,11 @@ class HospitalCypherChain:
 
 if __name__ == "__main__":
     # Test with class instance
-    chain = HospitalCypherChain()
+    chain = HospitalCypherChain(
+        neo4j_uri=os.getenv("NEO4J_URI"), 
+        neo4j_user=os.getenv("NEO4J_USER"), 
+        neo4j_pasword=os.getenv("NEO4j_PASSWORD")
+    )
     query = "Tiểu bang nào có mức tăng phần trăm lớn nhất trong các lần khám Medicaid từ năm 2022 đến năm 2023"
     answer, generated_cypher = chain.invoke(query=query)
     print(f"Generated Cypher:\n{generated_cypher}\n")

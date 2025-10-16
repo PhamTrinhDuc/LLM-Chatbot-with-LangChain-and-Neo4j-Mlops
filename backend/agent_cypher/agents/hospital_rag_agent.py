@@ -6,12 +6,18 @@ from langchain import hub
 from langchain.agents import AgentExecutor, Tool, create_openai_functions_agent
 from langchain_openai import ChatOpenAI
 
+from memory.memory import MemoryPersistenceAgent
 from tools.wait_times import get_current_wait_times, get_most_available_hospital
 from tools.cypher_tool import CypherTool
 from tools.review_tool import ReviewTool
 from utils.config import AppConfig
 
 load_dotenv(".env.dev")
+
+NEO4J_URI=os.getenv("NEO4j_URI")
+NEO4J_USER=os.getenv("NEO4J_USER")
+NEO4J_PASSWORD=os.getenv("NEO4J_PASSWORD")
+
 
 
 class HospitalRAGAgent:
@@ -22,11 +28,20 @@ class HospitalRAGAgent:
     to provide comprehensive answers about hospital operations.
     """
     
-    def __init__(self):
+    def __init__(self, user_id: str, 
+                 session_id: str, 
+                 redis_url: str=None, 
+                 db_url: str=None):
         """Initialize the HospitalRAGAgent with tools and agent executor."""
         self._agent_executor = None
         self._tools = None
         self._prompt = None
+        self.memory_agent = MemoryPersistenceAgent(
+            user_id=user_id, 
+            session_id=session_id,
+            redis_url=redis_url or os.getenv("REDIS_URL"), 
+            db_url=db_url or os.getenv("DATABASE_URL"),
+        )
     
     @property
     def prompt(self):
@@ -40,9 +55,13 @@ class HospitalRAGAgent:
         """Get or create the list of tools available to the agent."""
         if self._tools is None:
           self._tools = [
-            CypherTool(),
+            CypherTool(neo4j_uri=NEO4J_URI, 
+                       neo4j_user=NEO4J_USER, 
+                       neo4j_password=NEO4J_PASSWORD),
             
-            ReviewTool(),
+            ReviewTool(neo4j_uri=NEO4J_URI, 
+                       neo4j_user=NEO4J_USER, 
+                       neo4j_password=NEO4J_PASSWORD),
             
             Tool(
                 name="Waits",
@@ -83,6 +102,7 @@ class HospitalRAGAgent:
             self._agent_executor = AgentExecutor(
                 agent=agent,
                 tools=self.tools,
+                memory=self.memory_agent.get_memory(), 
                 return_intermediate_steps=True,
                 verbose=False,
             )
@@ -175,7 +195,10 @@ if __name__ == "__main__":
     import asyncio
     
     # Test with class instance
-    agent = HospitalRAGAgent()
+    agent = HospitalRAGAgent(
+        user_id=1, 
+        session_id="session_user_1",
+    )
     
     # Test query
     query = "What have patients said about hospital efficiency?"
@@ -188,22 +211,22 @@ if __name__ == "__main__":
     print(f"Output: {response.get('output')}\n")
     print(f"Intermediate steps: {len(response.get('intermediate_steps', []))} steps")
     
-    print("\n" + "=" * 50)
-    print("TEST 2: Streaming (progressive response)")
-    print("=" * 50)
+    # print("\n" + "=" * 50)
+    # print("TEST 2: Streaming (progressive response)")
+    # print("=" * 50)
     
-    async def test_streaming():
-        print(f"Query: {query}\n")
-        async for chunk in agent.astream(query=query):
-            if 'actions' in chunk:
-                for action in chunk['actions']:
-                    print(f"🔧 Calling tool: {action.tool}")
-                    print(f"   Input: {action.tool_input}")
-            elif 'steps' in chunk:
-                for step in chunk['steps']:
-                    print(f"✅ Tool result received")
-            elif 'output' in chunk:
-                print(f"\n📝 Final answer: {chunk['output']}")
+    # async def test_streaming():
+    #     print(f"Query: {query}\n")
+    #     async for chunk in agent.astream(query=query):
+    #         if 'actions' in chunk:
+    #             for action in chunk['actions']:
+    #                 print(f"🔧 Calling tool: {action.tool}")
+    #                 print(f"   Input: {action.tool_input}")
+    #         elif 'steps' in chunk:
+    #             for step in chunk['steps']:
+    #                 print(f"✅ Tool result received")
+    #         elif 'output' in chunk:
+    #             print(f"\n📝 Final answer: {chunk['output']}")
     
-    asyncio.run(test_streaming())
-    print("=" * 50)
+    # asyncio.run(test_streaming())
+    # print("=" * 50)
