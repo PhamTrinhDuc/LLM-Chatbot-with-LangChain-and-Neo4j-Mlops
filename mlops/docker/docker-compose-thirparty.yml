@@ -48,8 +48,25 @@ services:
       - redis_data:/data
       - ./redis/redis.conf:/app/redis.conf:ro
     command: ["redis-server", "/app/redis.conf"]
-    environment:
-      - REDIS_PASSWORD=super_secure_password
+
+  postgresql:
+    image: postgres:13
+    container_name: postgresql
+    healthcheck:
+      # Kiểm tra database có kết nối được không
+      test: ['CMD', 'psql', '-U', 'project_de_user', -d, 'chatbot-medical', '-c', 'SELECT 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432" # Cổng chuẩn của PostgreSQL (host_port:container_port)
+    environment: 
+      - POSTGRES_DB=chatbot-medical
+      - POSTGRES_USER=project_de_user
+      - POSTGRES_PASSWORD=project_de_password
+    volumes: 
+      # Lưu dữ liệu vào volume để không bị mất khi restart
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   neo4j_data:
@@ -63,6 +80,9 @@ volumes:
   jenkins_home:
   redis_data:
     name: redis_data
+  postgres_data:
+    external: true
+    name: docker_postgres_data
 
 
 # a9b74df60c52428cb2d550471c05d733
