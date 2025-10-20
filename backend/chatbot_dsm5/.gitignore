@@ -19,7 +19,8 @@ __pycache__/
 notebook
 .vscode
 docstore
-chroma_db
+chromadb
+chunks.pkl
 
 # Distribution / packaging
 .Python
