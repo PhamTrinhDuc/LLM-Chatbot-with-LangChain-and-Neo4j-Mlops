@@ -161,7 +161,7 @@ class DocumentRetriever:
             )
 
             parent_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=self.chunk_size*3, 
+                chunk_size=self.chunk_size*6, 
                 chunk_overlap=self.chunk_overlap,
                 separators=["\n\n", "\n", " ", ""]
             )

@@ -12,7 +12,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain.schema import Document
 
 from loader import DocumentLoader
-from retriever import DocumentRetriever
+from parent_child_retriever.retriever import DocumentRetriever
 
 # Load environment variables
 load_dotenv('.env.dev')
@@ -108,7 +108,7 @@ def test_retrieval(retriever: DocumentRetriever):
                 
             for i, doc in enumerate(results[:3], 1):  # Show top 3 results
                 print(f"\nResult {i}:")
-                print(f"Content: {doc.page_content[:300]}...")
+                print(f"Content: {doc.page_content}")
                 if doc.metadata:
                     print(f"Metadata: {doc.metadata}")
                 print("-" * 40)
@@ -147,16 +147,16 @@ def main():
         retriever = setup_retriever()
         
         # Load documents
-        # docs = load_documents()
+        docs = load_documents()
         
         # # Ingest documents
-        # ingest_documents(retriever, docs)
+        ingest_documents(retriever, docs)
         
         # Test retrieval functionality
         test_retrieval(retriever)
         
         # Test direct vectorstore search
-        test_vectorstore_search(retriever)
+        # test_vectorstore_search(retriever)
         
         print("\n" + "=" * 60)
         print("Pipeline completed successfully!")
