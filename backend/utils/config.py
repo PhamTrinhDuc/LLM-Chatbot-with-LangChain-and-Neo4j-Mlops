@@ -24,6 +24,7 @@ class AppConfig:
   REDIS_URL: str = os.getenv("REDIS_URL")
   DATABASE_URL: str = os.getenv("DATABASE_URL")
   
+  INDEX_NAME: str = "healthcare"
   VECTOR_SIZE: int=1536
   TEMPERATURE: float=0
   REVIEW_TOP_K: int=10

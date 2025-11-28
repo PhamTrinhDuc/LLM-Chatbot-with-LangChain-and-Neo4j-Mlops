@@ -1,7 +1,6 @@
 import asyncio
 from typing import Literal
 from utils.config import AppConfig
-from typing import Literal
 from utils.logging import logger
 
 
@@ -85,4 +84,4 @@ class ModelFactory:
       model=AppConfig.OPENAI_EMBEDDING, 
       api_key=AppConfig.OPENAI_API_KEY, 
     )
-    return embedding_model
+    return embedding_model 
