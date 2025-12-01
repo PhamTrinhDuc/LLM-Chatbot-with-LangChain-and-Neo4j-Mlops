@@ -198,13 +198,3 @@ if __name__ == "__main__":
   # section_queue = load_json(path="section_queue.json")
   # context_headers = build_context_headers(section_queue=section_queue)
   # print(context_headers)
-
-
-# =================
-# TROUBLESHOOTING
-# =================
-
-# 1. Problem với Section_queue: 
-# - Giả sử section_id: 1 xuất hiện 2 nơi trong PDF => section_id: 1 đầu tiên sẽ bị ghi đè => Nếu build_context_headers cho toàn bộ chunks sau khi đã tạo chunks xong thì section_id: 1 sẽ không còn đúng
-# - Giải pháp: thay vì build lại sau khi đã tạo xong chunks thì tạo luôn cho từng chunk lúc tạo chunk đó. 
-# 

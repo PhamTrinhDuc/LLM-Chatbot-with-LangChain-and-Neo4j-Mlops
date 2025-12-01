@@ -39,7 +39,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "asyncio", specifier = "==3.4.3" },
-    { name = "elasticsearch", specifier = ">=9.2.0" },
+    { name = "elasticsearch", specifier = "==8.13.0" },
     { name = "fastapi", specifier = "==0.109.0" },
     { name = "google-generativeai", specifier = "==0.7.2" },
     { name = "langchain", specifier = "==0.2.17" },
@@ -463,32 +463,27 @@ wheels = [
 
 [[package]]
 name = "elastic-transport"
-version = "9.2.0"
+version = "8.17.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
-    { name = "sniffio" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a9/0c/b48a9041e921a75e4c0d17e0dfe929f4d72c4e523084cbe5574101b7a40d/elastic_transport-9.2.0.tar.gz", hash = "sha256:0331466ca8febdb7d168c0fbf159294b0066492733b51da94f4dd28a0ee596cd", size = 77332, upload-time = "2025-10-17T16:12:49.906Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/54/d498a766ac8fa475f931da85a154666cc81a70f8eb4a780bc8e4e934e9ac/elastic_transport-8.17.1.tar.gz", hash = "sha256:5edef32ac864dca8e2f0a613ef63491ee8d6b8cfb52881fa7313ba9290cac6d2", size = 73425, upload-time = "2025-03-13T07:28:30.776Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/4a/6a1cc529ec609dae4d681baddde9ad965b8952d1f56dadbb1d27fbb50ec9/elastic_transport-9.2.0-py3-none-any.whl", hash = "sha256:f52b961e58e6b76d488993286907f61a6ddccbdae8e0135ce8d369227b6282d8", size = 65317, upload-time = "2025-10-17T16:12:48.437Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/cd/b71d5bc74cde7fc6fd9b2ff9389890f45d9762cbbbf81dc5e51fd7588c4a/elastic_transport-8.17.1-py3-none-any.whl", hash = "sha256:192718f498f1d10c5e9aa8b9cf32aed405e469a7f0e9d6a8923431dbb2c59fb8", size = 64969, upload-time = "2025-03-13T07:28:29.031Z" },
 ]
 
 [[package]]
 name = "elasticsearch"
-version = "9.2.0"
+version = "8.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "anyio" },
     { name = "elastic-transport" },
-    { name = "python-dateutil" },
-    { name = "sniffio" },
-    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/87/6e70b8dac9c781c53edba944b50545431e2bb937d21c06d6009ef18b5f91/elasticsearch-9.2.0.tar.gz", hash = "sha256:99656baa34b10130402b6c38429feddf7aee1c3247566e8f95f0d0267fe9f9ab", size = 875370, upload-time = "2025-10-28T16:57:25.437Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/80/19f953303e8d90ec7cfb4b22a1b62b8a27592fbc262e00cded1809f244ae/elasticsearch-8.13.0.tar.gz", hash = "sha256:e4ebebb22d09f0ef839c26b6aa98e19ccd636bcb77f08c12b562b02cacd5e744", size = 362830, upload-time = "2024-03-27T12:07:13.282Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/f2/6b44ee99e90c9d9e183aafeea0c3af87176d4acef446c286223704ea8f2e/elasticsearch-9.2.0-py3-none-any.whl", hash = "sha256:87090fe98c515ec0fce82f633fe11d7e90e04d93581b6b3e05de29efe4cc8b74", size = 960522, upload-time = "2025-10-28T16:57:20.979Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/d7/b7a45c7ed73a0e4ac6a2d2430e55c2f735d9885a6e3b0319e30285288dba/elasticsearch-8.13.0-py3-none-any.whl", hash = "sha256:4aaf49253e974eb500f01136a487bdd0f09d3cafd37a0456eff6acfff0c9199b", size = 451005, upload-time = "2024-03-27T12:07:08.505Z" },
 ]
 
 [[package]]
@@ -1688,18 +1683,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-dateutil"
-version = "2.9.0.post0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
-]
-
-[[package]]
 name = "python-dotenv"
 version = "1.1.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1900,15 +1883,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/da/8a/22b7beea3ee0d44b1916c0c1cb0ee3af23b700b6da9f04991899d0c555d4/rsa-4.9.1.tar.gz", hash = "sha256:e7bdbfdb5497da4c07dfd35530e1a902659db6ff241e39d9953cad06ebd0ae75", size = 29034, upload-time = "2025-04-16T09:51:18.218Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/8d/0133e4eb4beed9e425d9a98ed6e081a55d195481b7632472be1af08d2f6b/rsa-4.9.1-py3-none-any.whl", hash = "sha256:68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762", size = 34696, upload-time = "2025-04-16T09:51:17.142Z" },
-]
-
-[[package]]
-name = "six"
-version = "1.17.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]
