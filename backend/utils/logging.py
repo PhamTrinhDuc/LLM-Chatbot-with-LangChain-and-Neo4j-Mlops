@@ -5,6 +5,7 @@ import json
 from datetime import timedelta, datetime
 from contextvars import ContextVar
 from loguru import logger as _logger
+from config import AppConfig
 
 # === 1. ContextVar — chỉ KHAI BÁO 1 LẦN ở global scope ===
 trace_id_ctx: ContextVar[str] = ContextVar("trace_id", default="none")
@@ -53,8 +54,8 @@ def _setup_logger():
     _logger.remove()  # Xóa default handler
 
     # Lấy config từ env (hoặc hardcode nếu chưa có AppConfig)
-    env = os.getenv("LOG_ENV", "development").lower()
-    log_dir = os.path.join(os.getenv("LOG_DIR", "./logs"), "app.log")
+    env = AppConfig.ENV_LOG
+    log_dir = AppConfig.LOG_DIR
     os.makedirs(os.path.dirname(log_dir), exist_ok=True)
 
     if env == "production":

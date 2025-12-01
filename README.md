@@ -15,6 +15,7 @@
   - [2.1 Graph Database Design](#21-graph-database-design)
   - [2.2 Setup Neo4j Instance](#22-setup-neo4j-instance)
   - [2.3 ETL Data CSV to Neo4j](#23-etl-data-csv-to-neo4j)
+- [3. Design Agent and Tools](#3-design-agent-and-tools)
 
 ## 1. Understanding Business Data
 
@@ -271,3 +272,380 @@ What the test checks:
 - It computes the number of distinct `physician_id` values in `data/english/visits.csv` for `hospital_id == 14`.
 - It runs a Cypher query to count distinct `Physician` nodes that the `Hospital` node with `id=14` `EMPLOYS`.
 - The test asserts the two counts are equal and prints the result.
+
+
+## 3. Design Agent and Tools
+
+### 3.1 Agent Architecture Overview
+
+The Hospital RAG Agent is built using LangChain's agent framework to provide intelligent, multi-step responses to hospital-related queries. The agent combines multiple specialized tools that access different data sources to provide comprehensive answers.
+
+**Key Components:**
+- **Agent Executor**: Orchestrates the execution flow and manages tool calling
+- **LLM (Language Model)**: Decides which tools to use and generates responses
+- **Memory System**: Maintains conversation history using Redis
+- **Multiple Tools**: Each tool specializes in different types of queries
+
+### 3.2 Tools Overview
+
+#### 3.2.1 Cypher Tool
+**Purpose:** Execute custom graph queries using Cypher language
+
+**Description:**
+The Cypher Tool allows the agent to run arbitrary Cypher queries against the Neo4j graph database. This is useful for complex graph traversals and structured queries that require knowledge of the data schema.
+
+**Use Cases:**
+- Find all physicians employed by a specific hospital
+- Get patient visit history
+- Analyze hospital staffing levels
+- Generate reports based on relationships between entities
+
+**Example Query:**
+```cypher
+MATCH (h:Hospital {hospital_name: $hospital_name})-[:EMPLOYS]->(p:Physician)
+RETURN p.physician_name, p.salary
+ORDER BY p.salary DESC
+```
+
+#### 3.2.2 Review Tool
+**Purpose:** Semantic search over patient reviews using vector embeddings
+
+**Description:**
+The Review Tool leverages Neo4j's vector index to perform semantic similarity search on patient reviews. It uses embedding models to find reviews semantically similar to user queries, enabling natural language search over unstructured review text.
+
+**Key Features:**
+- Vector embedding of review text
+- K-nearest neighbors (KNN) search for similarity
+- Returns relevant reviews with context about physicians, hospitals, and patients
+
+**Use Cases:**
+- "What do patients say about hospital quality?"
+- "Find reviews mentioning long wait times"
+- "Get feedback about specific physicians"
+- "Analyze patient satisfaction trends"
+
+**How It Works:**
+1. User query is embedded using the same embedding model as the reviews
+2. Neo4j performs vector similarity search
+3. Top-K most similar reviews are returned with metadata
+4. Results are formatted with context (hospital name, physician, patient name)
+
+#### 3.2.3 Wait Times Tool
+**Purpose:** Get current wait times at specific hospitals
+
+**Description:**
+Provides real-time or near-real-time wait time information for hospital visits. This tool interfaces with a wait time management system to provide up-to-date operational metrics.
+
+**Function:** `get_current_wait_times(hospital_name: str) -> str`
+
+**Example Usage:**
+- "What is the current wait time at Jordan Inc Hospital?"
+- "How long is the wait at City General?"
+
+**Input Format:**
+- Hospital name (without the word "hospital")
+- Example: Input "Jordan Inc" for "Jordan Inc Hospital"
+
+**Output Format:**
+Returns wait time in minutes as a formatted string
+
+#### 3.2.4 Availability Tool
+**Purpose:** Find hospitals with shortest wait times
+
+**Description:**
+Identifies which hospital in the system currently has the shortest wait time, useful for patients trying to decide where to seek care.
+
+**Function:** `get_most_available_hospital() -> dict`
+
+**Example Usage:**
+- "Which hospital has the shortest wait time?"
+- "Where should I go for the quickest service?"
+
+**Output Format:**
+Returns a dictionary with hospital names as keys and wait times in minutes as values:
+```python
+{
+    "Jordan Inc": 15,
+    "City General": 23,
+    "...": "..."
+}
+```
+
+### 3.3 Agent Configuration
+
+#### 3.3.1 Models Supported
+
+**LLM Models:**
+- `gpt-4o-mini`: OpenAI's efficient GPT-4 variant (recommended for cost)
+- `gpt-4`: Full OpenAI GPT-4 model (higher performance)
+- `models/gemini-2.5-flash-lite`: Google's Gemini Flash model (fast and efficient)
+- `models/gemini-pro`: Google's full Gemini model (higher quality)
+
+**Embedding Models:**
+- `text-embedding-3-small`: OpenAI (1536 dimensions)
+- `text-embedding-3-large`: OpenAI (3072 dimensions, higher quality)
+- `models/gemini-embedding-001`: Google Gemini (768 dimensions)
+
+#### 3.3.2 Agent Initialization
+
+```python
+from agents import HospitalRAGAgent
+
+# Create agent instance
+agent = HospitalRAGAgent(
+    llm_model="google",              # or "openai"
+    embedding_model="openai",        # or "google"
+    user_id="user_123",
+    session_id="session_456"         # optional
+)
+
+# Query the agent
+query = "What hospitals have the shortest wait times?"
+result = agent.invoke(query=query)
+```
+
+**Parameters:**
+- `llm_model`: Choice of language model provider
+- `embedding_model`: Choice of embedding model provider
+- `user_id`: Unique user identifier for memory management
+- `session_id`: Optional session identifier (auto-generated if not provided)
+
+### 3.4 Agent Execution Modes
+
+#### 3.4.1 Synchronous Execution (`invoke`)
+
+Waits for complete response before returning.
+
+```python
+result = agent.invoke(query="What is the wait time at Jordan Inc?")
+
+# Result structure:
+{
+    "output": "The current wait time at Jordan Inc is 15 minutes.",
+    "intermediate_steps": [
+        (AgentAction(...), "15 minutes"),
+        ...
+    ],
+    "metadata": [...]
+}
+```
+
+**Use Cases:**
+- Simple queries that return quickly
+- API endpoints with standard request-response pattern
+
+#### 3.4.2 Asynchronous Execution (`ainvoke`)
+
+Non-blocking async execution for integration with async frameworks.
+
+```python
+result = await agent.ainvoke(query="What is the wait time at Jordan Inc?")
+
+# Same result structure as invoke()
+```
+
+**Use Cases:**
+- FastAPI applications
+- Concurrent query processing
+- High-throughput systems
+
+#### 3.4.3 Streaming Execution (`stream`)
+
+Yields results progressively as tools execute, enabling real-time UI updates.
+
+```python
+for chunk in agent.stream(query="What is the wait time at Jordan Inc?"):
+    if "actions" in chunk:
+        # Tool is being called
+        action = chunk["actions"][0]
+        print(f"Calling tool: {action.tool}")
+    elif "steps" in chunk:
+        # Tool execution completed
+        print("Tool result received")
+    elif "output" in chunk:
+        # Final response ready
+        print(f"Final answer: {chunk['output']}")
+```
+
+**Chunk Types:**
+- `actions`: Tool invocations being executed (LLM decided to use a tool)
+- `steps`: Completed tool execution results
+- `output`: Final agent response
+
+**Use Cases:**
+- Real-time chat interfaces
+- Progressive response display
+- Long-running queries with progress updates
+
+#### 3.4.4 Async Streaming Execution (`astream`)
+
+Combines async and streaming for real-time, non-blocking updates.
+
+```python
+async for chunk in agent.astream(query="What hospitals are available?"):
+    if "actions" in chunk:
+        for action in chunk["actions"]:
+            print(f"🔧 Tool: {action.tool}")
+            print(f"   Input: {action.tool_input}")
+    elif "steps" in chunk:
+        for step in chunk["steps"]:
+            print(f"✅ Result: {step.observation}")
+    elif "output" in chunk:
+        print(f"📝 Answer: {chunk['output']}")
+```
+
+**Best For:**
+- WebSocket-based real-time chat
+- Progressive rendering in async web applications
+- Complex queries that need to show thinking process
+
+### 3.5 Memory Management
+
+#### 3.5.1 Redis-Based Chat History
+
+The agent uses Redis to maintain conversation history for multi-turn conversations.
+
+**Configuration:**
+```python
+# In config.py
+REDIS_URL: str = os.getenv("REDIS_URL")  # e.g., "redis://localhost:6379/0"
+TTL: int = 86400  # 24 hours in seconds
+MEMORY_TOP_K: int = 5  # Keep last 5 messages
+```
+
+**How It Works:**
+1. Each user session gets a unique Redis key
+2. Chat messages are stored with TTL (time-to-live)
+3. Agent retrieves conversation context for each query
+4. Maintains full conversation history for coherent multi-turn dialogues
+
+#### 3.5.2 Memory Properties
+
+```python
+# Memory is automatically created per session
+self.message_history = RedisChatMessageHistory(
+    session_id=session_id,
+    url=AppConfig.REDIS_URL,
+    ttl=AppConfig.TTL
+)
+
+self._memory = ConversationBufferWindowMemory(
+    chat_memory=self.message_history,
+    memory_key="chat_history",
+    return_messages=True,
+    output_key="output",
+    k=AppConfig.MEMORY_TOP_K  # Keep last 5 messages
+)
+```
+
+### 3.6 Intermediate Steps and Reasoning
+
+The agent exposes intermediate execution steps, allowing visibility into the agent's reasoning process.
+
+**Metadata Extraction:**
+```python
+result = agent.invoke(query="What is the wait time?")
+
+# Intermediate steps show tool calls and results
+for action, observation in result["intermediate_steps"]:
+    print(f"Tool: {action.tool}")
+    print(f"Input: {action.tool_input}")
+    print(f"Result: {observation}")
+```
+
+**Use Cases:**
+- Debugging agent behavior
+- Transparency for users (showing what tools were used)
+- Tracing decision-making process
+- Quality assurance and testing
+
+### 3.7 Implementation Details
+
+#### 3.7.1 Tool Selection Logic
+
+The LLM decides which tools to use based on:
+1. **Query understanding**: What is the user asking?
+2. **Tool descriptions**: How does the tool help answer the question?
+3. **Context**: What tools have been useful in similar contexts?
+
+**Example Decision Flow:**
+```
+User Query: "What do patients say about hospital quality?"
+    ↓
+LLM Analysis: This is asking about patient feedback/reviews
+    ↓
+Tool Selection: ReviewTool (semantic search over reviews)
+    ↓
+Tool Execution: Search for reviews mentioning quality
+    ↓
+Response: "Patients mention..."
+```
+
+#### 3.7.2 Error Handling
+
+The agent includes comprehensive error handling:
+
+```python
+try:
+    result = agent.invoke(query=query)
+except Exception as e:
+    logger.error(f"Error in invoke: {e}")
+    # Graceful error handling
+    raise e
+```
+
+**Common Issues and Resolutions:**
+- **Redis connection failure**: Check `REDIS_URL` and Redis server status
+- **Neo4j connection failure**: Verify Neo4j instance is running
+- **API key issues**: Ensure OpenAI/Google API keys are set in `.env.dev`
+- **Embedding dimension mismatch**: Regenerate embeddings with matching model
+
+### 3.8 Usage Examples
+
+#### Example 1: Basic Query
+```python
+agent = HospitalRAGAgent(
+    llm_model="google",
+    embedding_model="openai",
+    user_id="user_123"
+)
+
+response = agent.invoke("Which hospital has the shortest wait time?")
+print(response["output"])
+```
+
+#### Example 2: Multi-turn Conversation
+```python
+agent = HospitalRAGAgent(
+    llm_model="google",
+    embedding_model="openai",
+    user_id="user_123",
+    session_id="conversation_1"
+)
+
+# First turn
+response1 = agent.invoke("What hospitals are in New York?")
+
+# Second turn - agent remembers previous context
+response2 = agent.invoke("Which one has the best patient reviews?")
+```
+
+#### Example 3: Streaming with Real-time Display
+```python
+async for chunk in agent.astream("Get hospital information"):
+    if "actions" in chunk:
+        print("🔄 Thinking...")
+    elif "steps" in chunk:
+        print("✓ Retrieved data")
+    elif "output" in chunk:
+        print(f"Answer: {chunk['output']}")
+```
+
+### 3.9 Performance Tuning
+
+**Optimization Tips:**
+1. **Model Selection**: Use faster models for real-time applications (e.g., Gemini Flash)
+2. **Memory Window**: Reduce `MEMORY_TOP_K` to limit context size for faster processing
+3. **Vector Search**: Adjust `REVIEW_TOP_K` based on result quality vs. speed tradeoff
+4. **Caching**: Implement caching for frequently asked questions
+5. **Batch Processing**: Use async/streaming modes for concurrent queries
