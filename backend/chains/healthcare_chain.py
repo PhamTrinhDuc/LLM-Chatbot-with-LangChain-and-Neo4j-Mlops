@@ -8,7 +8,6 @@ from google import generativeai as genai
 from elasticsearch import Elasticsearch
 from typing import List, Dict, Any, Literal, Optional
 import asyncio
-import re
 from utils import AppConfig, logger
 
 
@@ -39,7 +38,7 @@ class HealthcareRetriever:
     
     def __init__(
         self,
-        model_name: Literal["openai", "google"] = "google",
+        model_name: Literal["openai", "google"] = "openai",
     ):
         self.index_name = AppConfig.INDEX_NAME_ELS
         self.model_name = model_name
@@ -418,8 +417,8 @@ class HealthcareRetriever:
         query=query,
         top_k=config.get("top_k", 10),
         rrf_k=config.get("rrf_k", 60),
-        keyword_weight=config.get("keyword_weight", 1.2),
-        vector_weight=config.get("vector_weight", 0.6),
+        keyword_weight=config.get("keyword_weight", 1.0),
+        vector_weight=config.get("vector_weight", 1.2),
         include_context=config.get("include_context", False)
       )
     
@@ -467,11 +466,11 @@ class HealthcareRetriever:
 
 
 if __name__ == "__main__":
-    retriever = HealthcareRetriever(model_name="google")
+    retriever = HealthcareRetriever(model_name="openai")
     
     # Test hybrid search
     query = "Rối loạn trầm cảm"
-    print(f"\n🔍 Query: '{query}'\n")
+    print(f"\n🔍 Query: '{query}'\n") 
     
     results = retriever.invoke(query, config={"top_k": 5, "include_context": False})
     

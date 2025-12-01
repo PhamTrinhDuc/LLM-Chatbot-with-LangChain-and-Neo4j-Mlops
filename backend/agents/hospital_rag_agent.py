@@ -6,7 +6,13 @@ from langchain import hub
 from langchain.agents import AgentExecutor, Tool, create_openai_functions_agent
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain.memory import ConversationBufferWindowMemory
-from tools import CypherTool, ReviewTool, get_current_wait_times, get_most_available_hospital
+from tools import (
+  CypherTool, 
+  ReviewTool, 
+  DSM5RetrievalTool,
+  get_current_wait_times, 
+  get_most_available_hospital
+)
 from utils import AppConfig, ModelFactory, logger
 
 class HospitalRAGAgent:
@@ -74,7 +80,10 @@ class HospitalRAGAgent:
 
             ReviewTool(llm_model=self.llm_model, 
                        embedding_model=self.embedding_model),
-            
+
+            DSM5RetrievalTool(
+               embedding_model=self.embedding_model),
+               
             Tool(
                 name="Waits",
                 func=get_current_wait_times,
