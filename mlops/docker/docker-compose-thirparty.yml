@@ -56,6 +56,7 @@ volumes:
   neo4j_plugins:
     name: neo4j_plugins
   jenkins_home:
+    name: jenkins_home
   redis_data:
     name: redis_data
 

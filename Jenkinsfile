@@ -34,4 +34,5 @@ pipeline {
             sh 'echo "Deploying to production..."'
         }
     }
+  }
 }
