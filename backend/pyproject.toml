@@ -23,7 +23,7 @@ dependencies = [
   "asyncio==3.4.3",
   "fastapi==0.109.0",
   "numpy==1.26.2",
-  "elasticsearch>=9.2.0",
+  "elasticsearch==8.13.0",
   "pdfplumber>=0.11.8",
   "ngrok>=1.6.0",
 ]
