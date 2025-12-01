@@ -1,7 +1,16 @@
 from dataclasses import dataclass
 import os
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv(".env.dev")
+
+# Tìm đường dẫn tuyệt đối đến .env.dev (nằm ở backend/)
+# __file__ = .../backend/utils/config.py
+# .parent = .../backend/utils/
+# .parent.parent = .../backend/
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+ENV_PATH = BACKEND_DIR / ".env.dev"
+
+load_dotenv(ENV_PATH)
 
 @dataclass
 class AppConfig: 
@@ -25,7 +34,7 @@ class AppConfig:
   DATABASE_URL: str = os.getenv("DATABASE_URL")
 
   # PARAMETERS
-  VECTOR_SIZE: int=1536
+  VECTOR_SIZE: int=768
   TEMPERATURE: float=0
   REVIEW_TOP_K: int=10
   CYPHER_TOP_K: int=5
@@ -57,5 +66,9 @@ class AppConfig:
 
   DSM5_CHUNKS_PATH: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/data/dsm5_chunks.json"
 
-  LOG_DIR: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/backend/logs"
+  LOG_DIR: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/backend/logs/app.log"
   
+
+  # HOST, PORT 
+  ELS_HOST: str = os.getenv("ELS_HOST")
+  ELS_PORT: str = os.getenv("ELS_PORT")
