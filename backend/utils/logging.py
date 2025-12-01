@@ -5,7 +5,7 @@ import json
 from datetime import timedelta, datetime
 from contextvars import ContextVar
 from loguru import logger as _logger
-from config import AppConfig
+from .config import AppConfig
 
 # === 1. ContextVar — chỉ KHAI BÁO 1 LẦN ở global scope ===
 trace_id_ctx: ContextVar[str] = ContextVar("trace_id", default="none")
