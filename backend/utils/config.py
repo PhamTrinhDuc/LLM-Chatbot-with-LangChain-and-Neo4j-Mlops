@@ -24,7 +24,7 @@ class AppConfig:
   REDIS_URL: str = os.getenv("REDIS_URL")
   DATABASE_URL: str = os.getenv("DATABASE_URL")
 
-  # VECTOR STORE AND LLM PARAMETERS
+  # PARAMETERS
   VECTOR_SIZE: int=1536
   TEMPERATURE: float=0
   REVIEW_TOP_K: int=10
@@ -32,6 +32,7 @@ class AppConfig:
   MEMORY_TOP_K: int=5
   TTL: int=86400  # 24 hours in seconds
   LANGUAGE: str = "Vietnamese"
+  ENV_LOG: str = "development"
 
   # PROCESSING DATA FOR CHUNKING PDF 
   MIN_CHUNK_SIZE: int = 200
@@ -55,4 +56,6 @@ class AppConfig:
   DSM5_PATH: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/data/dsm-5-cac-tieu-chuan-chan-doan.pdf"
 
   DSM5_CHUNKS_PATH: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/data/dsm5_chunks.json"
+
+  LOG_DIR: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/backend/logs"
   
