@@ -34,9 +34,11 @@ def split_by_sentence(content: str):
   return chunks
     
 
-def merge_short_chunks(chunks: list[dict]): 
-  
-
+def merge_short_chunks(chunks: list[dict]):
+  """
+  Merge các chunk ngắn có cùng parent với nhau 
+  Tạo chunk mới được merge lấy thông tin  của chunk kế tiếp
+  """  
   chunk_merged = []
   index = 0
   while index < len(chunks): 
@@ -46,7 +48,7 @@ def merge_short_chunks(chunks: list[dict]):
     if (curr_chunk['metadata'].get('is_short', False) and index + 1 < len(chunks)):
       next_chunk = chunks[index + 1]
       # nếu cùng parent 
-      if curr_chunk['parent_id'] == next_chunk['parent_id']: 
+      if curr_chunk['parent_section_id'] == next_chunk['parent_section_id']: 
         combined_content = curr_chunk['content'] + "\n" + next_chunk['content']
 
         if len(combined_content) < AppConfig.MAX_CHUNK_SIZE: 
@@ -55,7 +57,7 @@ def merge_short_chunks(chunks: list[dict]):
             "content": combined_content, 
             "title": curr_chunk['title'] + ". " + next_chunk['title'],
             "metadata": {
-              **next_chunk,
+              **next_chunk['metadata'],
               "char_count": len(combined_content),
               "merged_from": [curr_chunk['section_id'], next_chunk['section_id']]
             }
@@ -66,6 +68,8 @@ def merge_short_chunks(chunks: list[dict]):
     
     chunk_merged.append(curr_chunk)
     index +=1 
+
+  return chunk_merged
 
 def split_long_context(content: str) -> list[dict[str, any]]:
     """
@@ -158,36 +162,29 @@ def process_chunks(chunks: list[dict]):
   2. Merge các chunk ngắn cùng parent
   """
   chunks_results = []
-  chunk_index_unique = 0
+  chunk_index_unique = 1
 
   for chunk in chunks: 
     content = chunk['content']
     title = chunk['title']
-    
+    context_header = chunk['context_headers']
+
     # split content
-    if content >= AppConfig.MAX_CHUNK_SIZE: 
+    if content and len(content) >= AppConfig.MAX_CHUNK_SIZE: 
       sub_chunks = split_long_context(content=content)
-      context_header = chunk['context_headers']
 
       for sub_chunk in sub_chunks: 
         sub_content = sub_chunk['content']
         final_content = clean_text(text=f"{title}\n{context_header}. {sub_content}" if context_header else sub_content)
 
         doc = {
+          **chunk,
           "unique_id": chunk_index_unique,
-          "chunk_idx": chunk['chunk_idx'],
-          "section_id": chunk['section_id'],
-          "section_level": chunk['level_number'],
-          "title": chunk['title'],
-          "parent_section_id": chunk['section_parent_id'], 
-          "parent_section_title": chunk['section_parent_title'],
           "sub_id": sub_chunk['sub_id'],
           "sub_title": sub_chunk['sub_title'],
-          "context_headers": chunk['context_headers'],
           "content": final_content,
           "metadata": {
-            "page_start": chunk['page_start'],
-            "source": chunk['source'],
+            **chunk['metadata'],
             "char_count": len(final_content), 
             "is_split": True,
           }
@@ -200,20 +197,11 @@ def process_chunks(chunks: list[dict]):
       final_content = clean_text(text=f"{title}\n{context_header}. {content}" if context_header else content)
       is_short = len(final_content) < AppConfig.MIN_CHUNK_SIZE
       doc = {
+        **chunk,
         "unique_id": chunk_index_unique,
-        "chunk_idx": chunk['chunk_idx'],
-        "section_id": chunk['section_id'],
-        "section_level": chunk['level_number'],
-        "title": chunk['title'],
-        "parent_section_id": chunk['section_parent_id'], 
-        "parent_section_title": chunk['section_parent_title'],
-        "sub_id": sub_chunk['sub_id'],
-        "sub_title": sub_chunk['sub_title'],
-        "context_headers": chunk['context_headers'],
         "content": final_content,
         "metadata": {
-          "page_start": chunk['page_start'],
-          "source": chunk['source'],
+          **chunk['metadata'],
           "char_count": len(final_content), 
           "is_short": is_short,
           "is_split": False
@@ -222,7 +210,7 @@ def process_chunks(chunks: list[dict]):
       chunks_results.append(doc)
       chunk_index_unique += 1
 
-  
+  # merge các chunk ngắn lại
   chunks_results = merge_short_chunks(chunks=chunks_results)
 
   # Set lại index sau khi merge 

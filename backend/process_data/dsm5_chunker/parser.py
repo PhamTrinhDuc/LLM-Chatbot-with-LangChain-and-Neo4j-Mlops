@@ -191,11 +191,7 @@ def parse_pdf_to_chunk(pdf_path: str) -> list[dict]:
 
 
 if __name__ == "__main__": 
-  chunks = parse_pdf_to_chunk(
-    pdf_path=AppConfig.DSM5_PATH
-  )
-
-
+  chunks = parse_pdf_to_chunk(pdf_path=AppConfig.DSM5_PATH)
   save_json(data=chunks, output_path=AppConfig.DSM5_CHUNKS_PATH)
   # output_section_queue = "section_queue.json"
   # save_json(data=section_queue, output_path=output_section_queue)
