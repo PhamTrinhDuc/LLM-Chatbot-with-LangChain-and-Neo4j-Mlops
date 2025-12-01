@@ -11,6 +11,7 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 PROCESS_CHUNKER_DIR="$PROJECT_ROOT/process_data/dsm5_chunker"
+INDEXING_DIR="$PROJECT_ROOT/process_data/"
 PYTHON_CMD="python" 
 
 # ====================== FUNTION LOG ===================================
@@ -31,9 +32,11 @@ show_help() {
   echo "Usage: $0 [OPTION]"
   echo ""
   echo "Options:"
-  echo "--parse     Parse PDF thành raw chunks"
-  echo "--process   Xử lý raw chunks (split, merge)"
-  echo "--pipeline  Pipeline xử lý Dsm5"
+  echo "--parse               Parse PDF thành raw chunks"
+  echo "--process             Xử lý raw chunks (split, merge)"
+  echo "--pipeline            Pipeline xử lý Dsm5"
+  echo "--index-els           Indexing chunks vào ELS"
+  echo "--delete-index-els    Xóa index name của ELS"
 }
 
 # 1. ============================ STEP PARSE PDF TO RAW CHUNKS=============================
@@ -53,7 +56,6 @@ step_parse() {
 }
 
 # 2. =========================== STEP PROCESSING RAW CHUNKS ============================
-
 step_process() {
   log_info "======================================="
   log_info "STEP 2: Processing Raw Chunks..."
@@ -69,6 +71,38 @@ step_process() {
   fi
 }
 
+# 3. =========================== INdexing chunks to ELS ============================
+index_elastic() {
+  log_info "==========================================="
+  log_info "STEP 3: Indexing chunks to Elasticsearch..."
+  log_info "==========================================="
+
+  cd "$INDEXING_DIR"
+  $PYTHON_CMD index_elastic.py --index
+  if [[ $? -eq 0 ]]; then
+    log_success "Indexing to Els hoàn tất"
+  else
+    log_error "Indexing to Els thất bại"
+    exit 1
+  fi
+}
+
+# 4. ======================= Optional: Delete index name ELS ========================
+delete_index_els() {
+  log_info "==========================================="
+  log_info "Delete index name of Elasticsearch..."
+  log_info "==========================================="
+
+  cd "$INDEXING_DIR"
+  $PYTHON_CMD index_elastic.py --delete
+  if [[ $? -eq 0 ]]; then
+    log_success "Xóa index name ELS hoàn tất"
+  else
+    log_error "Xóa index name ELS thất bại"
+    exit 1
+  fi
+}
+
 # ================================ ENTRY POINT =======================================
 case "${1:-}" in 
   --parse)
@@ -79,8 +113,13 @@ case "${1:-}" in
     ;;
   --pipeline)
     step_parse
-    echo ""
     step_process
+    ;;
+  --index-els)
+    index_elastic
+    ;;
+  --delete-index-els)
+    delete_index_els
     ;;
   --help)
     show_help
