@@ -73,57 +73,56 @@ class HospitalRAGAgent:
     
     @property
     def tools(self) -> list:
-        """Get or create the list of tools available to the agent."""
-        if self._tools is None:
-          self._tools = [
-            CypherTool(llm_model=self.llm_model),
+      """Get or create the list of tools available to the agent."""
+      if self._tools is None:
+        self._tools = [
+          CypherTool(llm_model=self.llm_model),
 
-            ReviewTool(llm_model=self.llm_model, 
-                       embedding_model=self.embedding_model),
+          ReviewTool(llm_model=self.llm_model, 
+                      embedding_model=self.embedding_model),
 
-            DSM5RetrievalTool(
-               embedding_model=self.embedding_model),
-               
-            Tool(
-                name="Waits",
-                func=get_current_wait_times,
-                description="""Use when asked about current wait times at a specific hospital. \
-                This tool can only get the current wait time at a hospital and does not have any information \
-                about aggregate or historical wait times. Do not pass the word "hospital" as input, only the \
-                hospital name itself. For example, if the prompt is "What is the current wait time at \
-                Jordan Inc Hospital?", the input should be "Jordan Inc"."""
-            ),
-            
-            Tool(
-                name="Availability",
-                func=get_most_available_hospital,
-                description="""Use when you need to find out which hospital has the shortest \
-                wait time. This tool does not have any information about aggregate or historical wait times. \
-                This tool returns a dictionary with the hospital name as the key and the wait time in minutes \
-                as the value."""
-              ),
-          ]
-        return self._tools
+          DSM5RetrievalTool(
+              embedding_model=self.embedding_model),
+              
+          Tool(
+            name="Waits",
+            func=get_current_wait_times,
+            description="""Use when asked about current wait times at a specific hospital. \
+            This tool can only get the current wait time at a hospital and does not have any information \
+            about aggregate or historical wait times. Do not pass the word "hospital" as input, only the \
+            hospital name itself. For example, if the prompt is "What is the current wait time at \
+            Jordan Inc Hospital?", the input should be "Jordan Inc"."""
+          ),
+          
+          Tool(
+            name="Availability",
+            func=get_most_available_hospital,
+            description="""Use when you need to find out which hospital has the shortest \
+            wait time. This tool does not have any information about aggregate or historical wait times. \
+            This tool returns a dictionary with the hospital name as the key and the wait time in minutes \
+            as the value."""
+          ),
+        ]
+      return self._tools
     
     @property
     def agent_executor(self) -> AgentExecutor:
-        """Get or create the agent executor."""
-        if self._agent_executor is None:
-            agent = create_openai_functions_agent(
-                llm=self.llm,
-                prompt=self.prompt,
-                tools=self.tools,
-            )
-            
-            self._agent_executor = AgentExecutor(
-                agent=agent,
-                tools=self.tools,
-                memory=self.memory,
-                return_intermediate_steps=True,
-                verbose=False,
-            )
+      """Get or create the agent executor."""
+      if self._agent_executor is None:
+        agent = create_openai_functions_agent(
+            llm=self.llm,
+            prompt=self.prompt,
+            tools=self.tools,
+        )
         
-        return self._agent_executor
+        self._agent_executor = AgentExecutor(
+            agent=agent,
+            tools=self.tools,
+            memory=self.memory,
+            return_intermediate_steps=True,
+            verbose=False,
+        )
+      return self._agent_executor
     
     def _extract_metadata(self, result: dict) -> dict:
         """Extract metadata from intermediate steps."""
