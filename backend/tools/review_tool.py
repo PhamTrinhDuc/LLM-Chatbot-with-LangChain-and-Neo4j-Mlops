@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import threading
 from langchain.tools import BaseTool
 from chains.hospital_review_chain import HospitalReviewChain
 
@@ -25,8 +26,21 @@ class ReviewTool(BaseTool):
     def __init__(self, llm_model: str, embedding_model: str):
       """Initialize the ReviewTool with a HospitalReviewChain instance."""
       super().__init__()
-      self.review_chain = HospitalReviewChain(llm_model=llm_model, embedding_model=embedding_model)
+      self.llm_model = llm_model
+      self.embedding_model = embedding_model
+      self._review_chain = None
     
+    @property
+    def review_chain(self): 
+      if not self._review_chain:
+        with threading.Lock():
+          self._review_chain =  HospitalReviewChain(
+            llm_model=self.llm_model, 
+            embedding_model=self.embedding_model
+          )
+
+      return self._review_chain
+       
     def _run(self, query: str) -> dict[str, any]:
       """
       Synchronous execution of review query.
