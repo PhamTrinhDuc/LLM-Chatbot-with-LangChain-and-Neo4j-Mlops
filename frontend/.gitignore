@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+users.json
+chat_history.json
+.pytest_cache/
+.streamlit/secrets.toml
+*.log
+.DS_Store
+node_modules/
+.venv/
+venv/
