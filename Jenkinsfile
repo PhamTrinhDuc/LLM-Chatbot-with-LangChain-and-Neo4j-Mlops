@@ -41,8 +41,8 @@ pipeline {
           # Install uv using official installer
           curl -LsSf https://astral.sh/uv/install.sh | sh
           
-          # Add uv to PATH (installer puts it in ~/.cargo/bin)
-          export PATH="$HOME/.cargo/bin:$PATH"
+          # Add uv to PATH (installer puts it in ~/.local/bin)
+          export PATH="$HOME/.local/bin:$PATH"
           
           # Verify installation
           echo "Checking uv installation..."
@@ -63,7 +63,7 @@ pipeline {
       steps {
         echo '===== Running linting ====='
         sh '''
-          export PATH="$HOME/.cargo/bin:$PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           
           cd backend
           uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
