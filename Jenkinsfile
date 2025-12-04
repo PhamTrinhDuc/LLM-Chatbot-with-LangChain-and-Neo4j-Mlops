@@ -33,16 +33,11 @@ pipeline {
       when {
         branch 'main'
       }
-      agent {
-        docker {
-            image 'python:3.12'
-        }
-      }
       steps {
         echo '===== Installing dependencies ====='
         sh '''
           cd backend
-          python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip install -e .
           pip install -r ../tests/requirements.txt
         '''
@@ -53,17 +48,12 @@ pipeline {
       when {
         branch 'main'
       }
-      agent {
-        docker {
-            image 'python:3.12'
-        }
-      }
       steps {
         echo '===== Running linting ====='
         sh '''
           cd backend
           pip install flake8
-          python -m flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
+          python3 -m flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
       }
     }
@@ -71,11 +61,6 @@ pipeline {
     stage('Test') {
       when {
         branch 'main'
-      }
-      agent {
-        docker {
-            image 'python:3.12'
-        }
       }
       steps {
         echo '===== Running tests ====='
