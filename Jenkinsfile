@@ -74,7 +74,9 @@ pipeline {
           /usr/local/bin/uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
         '''
       }
-    }    stage('Build Docker Images') {
+    }    
+    
+    stage('Build Docker Images') {
       when {
         branch 'main'
       }
