@@ -36,10 +36,11 @@ pipeline {
       steps {
         echo '===== Installing dependencies ====='
         sh '''
-          export PATH="/root/.local/bin:$PATH"
+          # Cài uv global
+          pip3 install --break-system-packages uv
+          
           cd backend
-          uv pip install --upgrade pip
-          uv pip install -e .
+          uv sync --no-dev
           uv pip install -r ../tests/requirements.txt
         '''
       }
@@ -52,10 +53,8 @@ pipeline {
       steps {
         echo '===== Running linting ====='
         sh '''
-          export PATH="/root/.local/bin:$PATH"
           cd backend
-          uv pip install flake8
-          python3 -m flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
+          uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
       }
     }
@@ -67,12 +66,11 @@ pipeline {
       steps {
         echo '===== Running tests ====='
         sh '''
-          export PATH="/root/.local/bin:$PATH"
           cd backend
-          pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
+          uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
         '''
       }
-    }
+}
 
     stage('Build Docker Images') {
       when {
