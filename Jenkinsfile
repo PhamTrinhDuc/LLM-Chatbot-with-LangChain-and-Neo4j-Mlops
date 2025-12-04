@@ -35,7 +35,7 @@ pipeline {
       }
       agent {
         docker {
-          image 'python:3.12'
+            image 'python:3.12'
         }
       }
       steps {
@@ -55,7 +55,7 @@ pipeline {
       }
       agent {
         docker {
-          image 'python:3.12'
+            image 'python:3.12'
         }
       }
       steps {
@@ -74,8 +74,7 @@ pipeline {
       }
       agent {
         docker {
-          image 'python:3.12'
-          // args '-v /var/run/docker.sock:/var/run/docker.sock'
+            image 'python:3.12'
         }
       }
       steps {
