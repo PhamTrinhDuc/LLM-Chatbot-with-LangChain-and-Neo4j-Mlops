@@ -39,9 +39,13 @@ pipeline {
           # Cài uv global
           pip3 install --break-system-packages uv
           
+          # Export PATH để tìm được uv
+          export PATH="/usr/local/bin:/usr/bin:$PATH"
+          which uv || /usr/local/bin/uv --version
+          
           cd backend
-          uv sync --no-dev
-          uv pip install -r ../tests/requirements.txt
+          /usr/local/bin/uv sync --no-dev
+          /usr/local/bin/uv pip install -r ../tests/requirements.txt
         '''
       }
     }
@@ -54,7 +58,7 @@ pipeline {
         echo '===== Running linting ====='
         sh '''
           cd backend
-          uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
+          /usr/local/bin/uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
       }
     }
@@ -67,12 +71,10 @@ pipeline {
         echo '===== Running tests ====='
         sh '''
           cd backend
-          uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
+          /usr/local/bin/uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
         '''
       }
-}
-
-    stage('Build Docker Images') {
+    }    stage('Build Docker Images') {
       when {
         branch 'main'
       }
