@@ -36,16 +36,22 @@ pipeline {
       steps {
         echo '===== Installing dependencies ====='
         sh '''
-          # Cài uv global
-          pip3 install --break-system-packages uv
+          set -e  # Exit on error
           
-          # Export PATH để tìm được uv
-          export PATH="/usr/local/bin:/usr/bin:$PATH"
-          which uv || /usr/local/bin/uv --version
+          # Install uv using official installer
+          curl -LsSf https://astral.sh/uv/install.sh | sh
           
+          # Add uv to PATH (installer puts it in ~/.cargo/bin)
+          export PATH="$HOME/.cargo/bin:$PATH"
+          
+          # Verify installation
+          echo "Checking uv installation..."
+          uv --version
+          
+          # Install dependencies
           cd backend
-          /usr/local/bin/uv sync --no-dev
-          /usr/local/bin/uv pip install -r ../tests/requirements.txt
+          uv sync --no-dev
+          uv pip install -r ../tests/requirements.txt
         '''
       }
     }
@@ -57,8 +63,10 @@ pipeline {
       steps {
         echo '===== Running linting ====='
         sh '''
+          export PATH="$HOME/.cargo/bin:$PATH"
+          
           cd backend
-          /usr/local/bin/uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
+          uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
       }
     }
@@ -70,8 +78,10 @@ pipeline {
       steps {
         echo '===== Running tests ====='
         sh '''
+          export PATH="$HOME/.cargo/bin:$PATH"
+          
           cd backend
-          /usr/local/bin/uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
+          uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
         '''
       }
     }    
