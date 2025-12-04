@@ -13,7 +13,7 @@ pipeline {
     FRONTEND_IMAGE = "${DOCKER_HUB_REPO}/ai-chatbot-ui"
     IMAGE_TAG = "${BUILD_NUMBER}"
     LATEST_TAG = "latest"
-    REGISTRY_CREDENTIALS = credentials('d89e16cf-8676-461f-bd00-78c52477cee0')
+    REGISTRY_CREDENTIALS = credentials('d89e16cf-8676-461f-bd00-78c52477cee0') // id credentials của docker trên jenkins
   }
   
   stages {
@@ -37,7 +37,7 @@ pipeline {
         echo '===== Installing dependencies ====='
         sh '''
           cd backend
-          python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip install -e .
           pip install -r ../tests/requirements.txt
         '''
@@ -53,7 +53,7 @@ pipeline {
         sh '''
           cd backend
           pip install flake8
-          python -m flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
+          python3 -m flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
       }
     }
