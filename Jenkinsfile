@@ -13,7 +13,7 @@ pipeline {
     FRONTEND_IMAGE = "${DOCKER_HUB_REPO}/ai-chatbot-ui"
     IMAGE_TAG = "${BUILD_NUMBER}"
     LATEST_TAG = "latest"
-    REGISTRY_CREDENTIALS = credentials('d89e16cf-8676-461f-bd00-78c52477cee0') // id credentials của docker trên jenkins
+    REGISTRY_CREDENTIALS = credentials('dockerhub-credentials') // id credentials của docker trên jenkins
   }
   
   stages {
