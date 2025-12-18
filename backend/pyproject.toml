@@ -25,5 +25,18 @@ dependencies = [
   "numpy==1.26.2",
   "elasticsearch==8.13.0",
   "pdfplumber>=0.11.8",
-  "ngrok>=1.6.0",
+  "pydantic-core>=2.18.4",
+  "opentelemetry-sdk>=1.22.0",
+  "opentelemetry-instrumentation-fastapi>=0.43b0",
+  "opentelemetry-exporter-prometheus>=0.43b0",
+]
+
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0",
+  "pytest-cov>=4.1.0",
+  "black>=24.0.0",
+  "ruff>=0.1.0",
 ]
