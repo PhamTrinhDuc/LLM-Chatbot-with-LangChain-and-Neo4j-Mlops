@@ -63,6 +63,8 @@ WORKDIR /home/appuser/app
 
 # Copy virtual environment và source code từ builder
 COPY --from=builder --chown=appuser:appuser /home/appuser/app .
+# COPY --chown=appuser:appuser ../data/dsm-5-cac-tieu-chuan-chan-doan.pdf /app/data/
+# COPY --chown=appuser:appuser ../data/dsm5_chunks.json /app/data/ 2>/dev/null || true
 
 # Kích hoạt venv
 ENV PATH="/home/appuser/app/.venv/bin:$PATH" \

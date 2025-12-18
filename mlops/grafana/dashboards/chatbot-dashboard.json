@@ -1,0 +1,107 @@
+{
+  "dashboard": {
+    "title": "Chatbot API Monitoring",
+    "tags": ["chatbot", "api", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(chat_requests_total[5m])",
+            "legendFormat": "{{endpoint}} - {{status}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Average Response Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(chat_request_duration_seconds_sum[5m]) / rate(chat_request_duration_seconds_count[5m])",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Active Chat Sessions",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "active_chat_sessions",
+            "legendFormat": "{{endpoint}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Total Requests",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(chat_requests_total)",
+            "legendFormat": "Total"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Error Rate (%)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "(rate(chat_requests_total{status=\"error\"}[5m]) / rate(chat_requests_total[5m])) * 100",
+            "legendFormat": "Error %"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "P95 Latency",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(chat_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Top Agent Tools",
+        "type": "bargauge",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [
+          {
+            "expr": "topk(5, rate(agent_tool_calls_total[5m]))",
+            "legendFormat": "{{tool_name}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Token Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "rate(chat_token_total[5m])",
+            "legendFormat": "{{endpoint}} - {{type}}"
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 27,
+    "version": 1
+  }
+}

@@ -1,0 +1,44 @@
+global: 
+  scrape_interval: 15s # lấy metrics 15s/1l
+  evaluation_interval: 15s # evaluate alert rules  15s/1l
+
+rule_files:
+  - alert-rules.yml # file chứa rules cảnh báo hệ thống
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+       - "alertmanager:9093"
+       
+scrape_configs: 
+  - job_name: "node"
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['node-exporter:9100']
+  
+  - job_name: "cadvisor"
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['cadvisor:8080']
+  
+  - job_name: "promotheus"
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  
+  - job_name: "chatbot-backend"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: '/metrics'  # ← Thêm metrics path
+    static_configs:
+      - targets: ['backend:8000']  # Service name trong cùng network
+
+  # - job_name: "frontend-chatbot"
+  #   scrape_interval: 10s
+  #   scrape_timeout: 5s
+  #   static_configs:
+  #     - targets: ['frontend:8501']
+  

@@ -1,23 +1,32 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from agents.hospital_rag_agent import HospitalRAGAgent
 from tools.health_tool import DSM5RetrievalTool
-from chains.healthcare_chain import HealthcareRetriever
 from tools import CypherTool
 from utils import AppConfig, logger
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import List, Optional
 import json
-import asyncio
 
-from database import get_db, User, Conversation, Message, init_db
+from app.database import get_db, User, Conversation, Message, init_db
+from app.schemas import (
+  UserRegister, 
+  QueryRequest, 
+  UserLogin, 
+  ConversationCreate,
+  MessageCreate
+)
+from mlops.instrument import setup_metrics, monitor_endpoint
+
 
 app = FastAPI(
     title="DSM-5 & Hospital Chatbot",
     description="RAG chatbot with hospital and DSM-5 data",
 )
+setup_metrics(app=app)
 
 # CORS middleware for frontend
 app.add_middleware(
@@ -39,53 +48,6 @@ dsm5_tool = DSM5RetrievalTool(embedding_model="google", top_k=10)
 cypher_tool = CypherTool(llm_model="google")
 
 
-class QueryRequest(BaseModel):
-    query: str
-    user_id: str = "default"
-    session_id: str = None
-
-
-# Auth models
-class UserRegister(BaseModel):
-    username: str
-    password: str
-
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-
-class MessageCreate(BaseModel):
-    role: str
-    content: str
-
-
-class ConversationCreate(BaseModel):
-    title: str = "New Conversation"
-
-
-class MessageResponse(BaseModel):
-    id: int
-    role: str
-    content: str
-    created_at: str
-    
-    class Config:
-        from_attributes = True
-
-
-class ConversationResponse(BaseModel):
-    id: int
-    title: str
-    created_at: str
-    updated_at: str
-    message_count: int = 0
-    
-    class Config:
-        from_attributes = True
-
-
 @app.get("/health")
 async def get_status():
     return {"status": "running", "service": "Hospital & DSM-5 Chatbot"}
@@ -95,6 +57,7 @@ async def get_status():
 # ============================================================
 
 @app.post("/chat")
+@monitor_endpoint("chat")
 async def chat(request: QueryRequest):
   """
   Chat endpoint - returns full response.
@@ -112,6 +75,7 @@ async def chat(request: QueryRequest):
 
 
 @app.post("/stream")
+@monitor_endpoint("stream")
 async def stream_chat(request: QueryRequest):
   """
   Streaming endpoint - returns results as they come.

@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # .parent.parent = .../backend/
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 ENV_PATH = BACKEND_DIR / ".env.dev"
+PROJET_ROOT = BACKEND_DIR.parent
 
 load_dotenv(ENV_PATH)
 
@@ -62,11 +63,9 @@ class AppConfig:
 
 
   # PATH DATA
-  DSM5_PATH: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/data/dsm-5-cac-tieu-chuan-chan-doan.pdf"
-
-  DSM5_CHUNKS_PATH: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/data/dsm5_chunks.json"
-
-  LOG_DIR: str = "/home/ducpham/workspace/LLM-Chatbot-with-LangChain-and-Neo4j/backend/logs/app.log"
+  DSM5_PATH: str = str(PROJET_ROOT / "data" / 'dsm-5-cac-tieu-chuan-chan-doan.pdf')
+  DSM5_CHUNKS_PATH: str = str(BACKEND_DIR.parent / "data" / "dsm5_chunks.json")
+  LOG_DIR: str = str(BACKEND_DIR / "logs" / "app.log")
   
 
   # HOST, PORT 

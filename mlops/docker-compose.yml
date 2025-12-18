@@ -1,0 +1,325 @@
+version: '3.8'
+
+services:
+
+  # =============================================================
+  # ======================== SERVICES FOR APP ===================
+  # =============================================================
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    ports:
+      - "7474:7474"   # HTTP port for Neo4j Browser and API
+      - "7687:7687"   # Bolt port for database connections
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p bot-neo4j 'RETURN 1'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    environment:
+      - NEO4J_AUTH=neo4j/bot-neo4j # custom username/password
+      - NEO4JLABS_PLUGINS=["apoc"]
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,gds.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*,gds.*
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_dbms_memory_pagecache_size=512m
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=2G
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - chatbot-network
+  
+  jenkins:
+    build: 
+      context: ./mlops/jenkins-custom
+      dockerfile: Dockerfile
+    image: duc8504/jenkins:lts-jdk17
+    container_name: jenkins
+    # privileged: true
+    # user: root
+    ports:
+      - 8081:8080
+      - 50000:50000
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - chatbot-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    # restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/app/redis.conf:ro
+    command: ["redis-server", "/app/redis.conf"]
+    networks:
+      - chatbot-network
+  
+  # =============================================================
+  # ======================== ELK STACK ==========================
+  # =============================================================
+  # The 'setup' service runs a one-off script which initializes the
+  # 'logstash_internal' and 'kibana_system' users inside Elasticsearch with the
+  # values of the passwords defined in the '.env' file.
+  #
+  # This task is only performed during the *initial* startup of the stack. On all
+  # subsequent runs, the service simply returns immediately, without performing
+  # any modification to existing users.
+  setup:
+    build:
+      context: setup/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    init: true
+    volumes:
+      - setup:/state:Z
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+      LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
+    networks:
+      - chatbot-network
+    depends_on:
+      - elasticsearch
+
+  elasticsearch:
+    build:
+      context: elasticsearch/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    container_name: elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
+      - elasticsearch:/usr/share/elasticsearch/data:z
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      # Bootstrap password.
+      # Used to initialize the keystore during the initial startup of
+      # Elasticsearch. Ignored on subsequent runs.
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+    networks:
+      - chatbot-network
+
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    ports:
+      - "5601:5601"
+    environment:
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
+    networks:
+      - chatbot-network
+    depends_on:
+      - elasticsearch
+  # =============================================================
+  # ==================== CORE BACKEND & FRONTEND ================
+  # =============================================================
+  
+  backend: 
+    image: ai-agent:1.0
+    container_name: backend-chatbot-langchain
+    
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    env_file:
+      - .env
+    networks:
+      - chatbot-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy  # ← Đợi ES healthy
+      neo4j:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend: 
+    image: ai-chatbot-ui:1.0
+    container_name: frontend-chatbot-langchain
+    ports:
+      - "8501:8501"
+    env_file:
+     - .env
+    networks:
+      - chatbot-network
+    depends_on:
+      backend: 
+        condition: service_healthy
+  
+  # =============================================================
+  # ================== MORNITERING STACKS =======================
+  # =============================================================
+  node-exporter:
+    image: prom/node-exporter:v1.3.1
+    container_name: node-exporter
+    volumes: 
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - 9100:9100
+    networks:
+      - chatbot-network
+
+  prometheus:
+    image: prom/prometheus:v2.38.0
+    container_name: prometheus
+    # restart: unless-stopped
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=20h'
+      - '--web.enable-lifecycle'
+    ports:
+      - 9090:9090
+    networks:
+      - chatbot-network
+
+  alertmanager:
+    image: prom/alertmanager:v0.25.0
+    container_name: alertmanager
+    # restart: unless-stopped
+    volumes:
+      - alertmanager_data:/alertmanager/data
+      - ./alertmanager:/alertmanager
+    command:
+      - '--config.file=/alertmanager/config.yml'
+      - '--storage.path=/alertmanager/data'
+      - '--log.level=debug'
+    ports:
+      - 9093:9093
+    networks:
+      - chatbot-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    # restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    ports:
+      - 8090:8080
+    networks:
+      - chatbot-network
+
+  grafana:
+    image: grafana/grafana:9.0.5
+    container_name: grafana
+    # restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./grafana/config/datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./grafana/dashboards:/opt/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin} # enter admin
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin} # enter admin
+    ports:
+      - 3000:3000
+    networks:
+      - chatbot-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f localhost:3000/api/health && echo 'ready'"]
+      interval: 10s
+      retries: 10             
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.47
+    container_name: jaeger
+    # restart: unless-stopped
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+    networks:
+      - chatbot-network
+
+
+volumes:
+  neo4j_data:
+    name: neo4j_data
+    external: true # xóa dòng này nếu chạy lần đầu
+  neo4j_logs:
+    name: neo4j_logs
+    external: true
+  neo4j_import:
+    name: neo4j_import
+    external: true
+  neo4j_plugins:
+    name: neo4j_plugins
+    external: true
+  jenkins_home:
+    name: jenkins_home
+    external: true
+  redis_data:
+    name: redis_data
+    external: true
+  prometheus_data:
+    name: prometheus_data
+  grafana_data:
+    name: grafana_data
+  alertmanager_data:
+    name: alertmanager_data
+  setup:
+    name: setup
+  elasticsearch:
+    name: source_es_data
+    external: true
+
+
+networks:
+  chatbot-network:
+    driver: bridge
+    name: chatbot-network
+
+# a9b74df60c52428cb2d550471c05d733
