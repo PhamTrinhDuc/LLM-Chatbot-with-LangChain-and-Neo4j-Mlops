@@ -1,0 +1,21 @@
+question_id,question,category,difficulty
+1,Bệnh nhân phải chờ bao lâu để được nhận vào bệnh viện?,wait_time,medium
+2,Thời gian chờ đợi trung bình cho các ca khám khẩn cấp là bao nhiêu?,wait_time,hard
+3,Có sự khác biệt về thời gian chờ đợi giữa các loại hình nhập viện không?,wait_time,hard
+4,Bệnh viện nào có thời gian chờ đợi ngắn nhất?,wait_time,hard
+5,Trong tháng nào có nhiều ca nhập viện nhất và điều này ảnh hưởng đến thời gian chờ như thế nào?,wait_time,hard
+6,Thời gian nằm viện trung bình của bệnh nhân là bao lâu?,wait_time,medium
+7,Bệnh nhân nào có thời gian nằm viện lâu nhất?,wait_time,medium
+8,So sánh thời gian điều trị giữa các ca Emergency và Elective,wait_time,hard
+9,Có bệnh nhân nào phàn nàn về thời gian chờ xét nghiệm trong đánh giá không?,wait_time,medium
+10,Thời gian từ khi nhập viện đến khi xuất viện trung bình cho mỗi loại nhập viện,wait_time,hard
+11,Tìm các ca khám có thời gian nằm viện dưới 3 ngày,wait_time,medium
+12,Bệnh viện nào có thời gian điều trị nhanh nhất cho các ca khẩn cấp?,wait_time,hard
+13,Có mối quan hệ nào giữa thời gian chờ đợi và mức độ hài lòng của bệnh nhân không?,wait_time,hard
+14,Những tháng nào trong năm có thời gian chờ đợi cao nhất?,wait_time,hard
+15,Tính thời gian nằm viện trung bình theo từng bệnh viện,wait_time,hard
+16,Có bao nhiêu ca khám được xuất viện trong vòng 24 giờ?,wait_time,medium
+17,Thời gian chờ đợi có ảnh hưởng đến kết quả điều trị không?,wait_time,hard
+18,So sánh thời gian điều trị giữa các bang khác nhau,wait_time,hard
+19,Bác sĩ nào có thời gian điều trị bệnh nhân nhanh nhất?,wait_time,hard
+20,Tìm các ca khám vẫn đang mở (OPEN) đã kéo dài bao lâu,wait_time,medium
