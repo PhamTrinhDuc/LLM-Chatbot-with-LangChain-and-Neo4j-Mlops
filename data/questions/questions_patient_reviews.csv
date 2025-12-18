@@ -1,0 +1,21 @@
+question_id,question,category,difficulty
+1,Bệnh nhân nào đã đưa ra đánh giá tích cực nhất về bệnh viện Wallace-Hamilton?,patient_reviews,easy
+2,Có bao nhiêu bệnh nhân phàn nàn về tiếng ồn trong bệnh viện?,patient_reviews,medium
+3,Những bác sĩ nào nhận được đánh giá tốt nhất từ bệnh nhân?,patient_reviews,medium
+4,Bệnh viện nào có nhiều đánh giá tiêu cực nhất?,patient_reviews,hard
+5,Những lời phàn nàn phổ biến nhất của bệnh nhân về bệnh viện là gì?,patient_reviews,medium
+6,Có bệnh nhân nào khen ngợi về sự sạch sẽ của cơ sở y tế không?,patient_reviews,easy
+7,Tìm những đánh giá có đề cập đến vấn đề chờ đợi quá lâu để nhận kết quả xét nghiệm,patient_reviews,medium
+8,Bệnh nhân nào đã để lại đánh giá về việc giao tiếp kém của đội ngũ y tế?,patient_reviews,medium
+9,Những đánh giá nào đề cập đến vấn đề bãi đậu xe của bệnh viện?,patient_reviews,easy
+10,Tìm những bệnh nhân cảm thấy hài lòng với việc giáo dục bệnh nhân về chẩn đoán và điều trị,patient_reviews,medium
+11,Có bác sĩ nào bị phàn nàn trong các đánh giá không?,patient_reviews,medium
+12,Những đánh giá nào đề cập đến tình trạng cơ sở vật chất lỗi thời?,patient_reviews,medium
+13,Bệnh viện nào được khen ngợi nhiều nhất về đội ngũ y tế chu đáo?,patient_reviews,hard
+14,Tìm các đánh giá có điểm số cao nhất (nếu có),patient_reviews,easy
+15,Những bệnh nhân nào cảm thấy bị thiếu thông tin trong quá trình điều trị?,patient_reviews,medium
+16,So sánh đánh giá của bệnh nhân về bệnh viện ở Florida và North Carolina,patient_reviews,hard
+17,Có bệnh nhân nào đề cập đến vấn đề an toàn bệnh nhân không?,patient_reviews,medium
+18,Tìm những đánh giá có nội dung trái ngược (khen cả khen và chê),patient_reviews,medium
+19,Những từ khóa nào xuất hiện nhiều nhất trong các đánh giá tiêu cực?,patient_reviews,hard
+20,Liệt kê các đánh giá của bệnh nhân nữ về trải nghiệm tại bệnh viện,patient_reviews,medium
