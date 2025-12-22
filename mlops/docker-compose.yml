@@ -192,6 +192,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    stop_grace_period: 40s
     env_file:
       - .env
     networks:
@@ -361,3 +363,4 @@ networks:
 
 # docker compose up -d
 # docker compose -f extensions/filebeat/filebeat-compose.yml up -d
+# stop all docker container but don't remove its: docker stop $(docker ps -q)
