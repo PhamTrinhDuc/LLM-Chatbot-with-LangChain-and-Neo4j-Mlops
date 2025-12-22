@@ -15,7 +15,7 @@ load_dotenv(ENV_PATH)
 
 @dataclass
 class AppConfig: 
-
+  APP_NAME: str = "chatbot-hospital-healcare"
   # LLM AND EMBEDDING MODEL CONFIGURATION
   OPENAI_LLM: str = "gpt-4o-mini"
   GOOGLE_LLM: str = "models/gemini-2.5-flash-lite"
@@ -42,7 +42,7 @@ class AppConfig:
   MEMORY_TOP_K: int=5
   TTL: int=86400  # 24 hours in seconds
   LANGUAGE: str = "Vietnamese"
-  ENV_LOG: str = "development"
+  ENV_LOG: str = os.getenv("ENV_LOG")
 
   # PROCESSING DATA FOR CHUNKING PDF 
   MIN_CHUNK_SIZE: int = 200
@@ -71,3 +71,6 @@ class AppConfig:
   # HOST, PORT 
   ELS_HOST: str = os.getenv("ELS_HOST")
   ELS_PORT: str = os.getenv("ELS_PORT")
+
+  JAEGER_HOST: str = os.getenv("JAEGER_HOST")
+  JAEGER_PORT: str = int(os.getenv("JAEGER_PORT")) # convert sang int nếu không sẽ bug 
