@@ -36,17 +36,8 @@ pipeline {
       steps {
         echo '===== Installing dependencies ====='
         sh '''
-          set -e  # Exit on error
-          
-          # Install uv using official installer
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          
-          # Add uv to PATH (installer puts it in ~/.local/bin)
+          set -e
           export PATH="$HOME/.local/bin:$PATH"
-          
-          # Verify installation
-          echo "Checking uv installation..."
-          uv --version
           
           # Install dependencies
           cd backend
@@ -64,7 +55,6 @@ pipeline {
         echo '===== Running linting ====='
         sh '''
           export PATH="$HOME/.local/bin:$PATH"
-          
           cd backend
           uv run flake8 . --max-line-length=120 --exclude=venv,__pycache__,.venv || true
         '''
@@ -78,7 +68,7 @@ pipeline {
       steps {
         echo '===== Running tests ====='
         sh '''
-          export PATH="$HOME/.cargo/bin:$PATH"
+          export PATH="$HOME/.local/bin:$PATH"
           
           cd backend
           uv run pytest ../tests -v --tb=short --junit-xml=test-results.xml || true
