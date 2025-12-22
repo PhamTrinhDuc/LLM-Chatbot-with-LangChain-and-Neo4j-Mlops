@@ -1,3 +1,6 @@
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
@@ -7,6 +10,7 @@ from prometheus_client import make_asgi_app
 import time
 from functools import wraps
 from typing import Callable
+from utils import logger
 
 # ============================================================
 # OpenTelemetry Setup
@@ -153,17 +157,20 @@ def setup_metrics(app):
       app = FastAPI()
       setup_metrics(app)
   """
-  
-  # Auto-instrument FastAPI với OpenTelemetry
-  # Tự động track: request count, duration, status codes
-  FastAPIInstrumentor.instrument_app(
-    app,
-    excluded_urls="/metrics,/health"  # Không track các endpoints này
-  )
-  
-  # Mount Prometheus metrics endpoint
-  # Prometheus sẽ scrape endpoint này để lấy metrics
-  metrics_app = make_asgi_app()
-  app.mount("/metrics", metrics_app)
-  
-  return app
+  try:
+    logger.info("🚀 Setting up OpenTelemetry metrics instrumentation")
+    # Auto-instrument FastAPI với OpenTelemetry
+    # Tự động track: request count, duration, status codes
+    FastAPIInstrumentor.instrument_app(
+      app,
+      excluded_urls="/metrics,/health"  # Không track các endpoints này
+    )
+    
+    # Mount Prometheus metrics endpoint
+    # Prometheus sẽ scrape endpoint này để lấy metrics
+    metrics_app = make_asgi_app()
+    app.mount("/metrics", metrics_app)
+    
+    return app
+  except Exception as e:
+    logger.error(f"❌ Error setting up metrics instrumentation: {e}") 

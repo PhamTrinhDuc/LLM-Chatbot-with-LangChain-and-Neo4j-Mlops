@@ -29,6 +29,7 @@ dependencies = [
   "opentelemetry-sdk>=1.22.0",
   "opentelemetry-instrumentation-fastapi>=0.43b0",
   "opentelemetry-exporter-prometheus>=0.43b0",
+  "opentelemetry-exporter-jaeger>=1.21.0",
 ]
 
 

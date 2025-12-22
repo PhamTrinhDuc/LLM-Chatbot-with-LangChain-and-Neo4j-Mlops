@@ -15,3 +15,13 @@
 >Dẫn đến 2 vector embedding khác nhau => context không chuẩn
 #### Giải pháp: Chỉ sử dụng 1 embedding model cho 2 tác vụ
 
+
+
+### 3. Log không hiện trong container 
+- Khi chạy trên localhost thì log từ app vẫn hiện dươi terminal. Nhưng trong container thì không hiện log 
+- Vấn đề là ở tham số `enqueue=True` khi setup logging. Khi chạy trong Docker:
+  - App bị stop nhanh
+  - Worker thread chưa kịp flush log
+  - Hoặc container dùng --restart, --healthcheck
+> log chưa kịp đẩy ra stdout ⇒ Docker không ghi
+- Sửa lại tham số `enqueue=False`

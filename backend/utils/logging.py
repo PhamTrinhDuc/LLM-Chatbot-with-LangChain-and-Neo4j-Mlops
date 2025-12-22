@@ -27,7 +27,7 @@ def _json_serializer(record):
     timestamp = vietnam_time.strftime("%Y-%m-%d %H:%M:%S")
 
     log_entry = {
-        "timestamp": timestamp,
+        "@timestamp": timestamp,
         "level": record["level"].name,
         "message": record["message"],
         "logger": record["name"],
@@ -57,12 +57,13 @@ def _setup_logger():
     env = AppConfig.ENV_LOG
     log_dir = AppConfig.LOG_DIR
     os.makedirs(os.path.dirname(log_dir), exist_ok=True)
+    print(f"[LOGGER SETUP] ENV_LOG={env}, LOG_DIR={log_dir}", file=sys.stderr, flush=True)
 
     if env == "production":
         def json_sink(message):
             try:
                 output = _json_serializer(message.record)
-                sys.stdout.write(output)
+                sys.stdout.write(output + '\n')
                 sys.stdout.flush()
             except Exception as e:
                 # Fallback: ghi lỗi log vào stderr (tránh silent fail)
@@ -72,12 +73,11 @@ def _setup_logger():
         _logger.add(
             json_sink,
             level="INFO",
-            enqueue=True,        # Bắt buộc cho async production
+            enqueue=False,       # tắt 
             backtrace=False,     # Tránh lộ stack trace nhạy cảm
             diagnose=False,
         )
     else:
-        # Dev mode: ghi file + màu mè
         _logger.add(
             log_dir,
             rotation="50 MB",
@@ -97,3 +97,6 @@ def _setup_logger():
 
 # === 5. Export instance duy nhất ===
 logger = _setup_logger()
+
+# === 6. Export trace_id_ctx để có thể set từ middleware ===
+__all__ = ["logger", "trace_id_ctx"]

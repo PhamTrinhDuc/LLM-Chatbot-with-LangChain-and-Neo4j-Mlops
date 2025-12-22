@@ -5,11 +5,13 @@ from agents.hospital_rag_agent import HospitalRAGAgent
 from tools.health_tool import DSM5RetrievalTool
 from tools import CypherTool
 from utils import AppConfig, logger
-from fastapi import FastAPI, HTTPException, Depends
+from utils.logging import trace_id_ctx
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import json
+import uuid
 
 from app.database import get_db, User, Conversation, Message, init_db
 from app.schemas import (
@@ -19,37 +21,81 @@ from app.schemas import (
   ConversationCreate,
   MessageCreate
 )
-from mlops.instrument import setup_metrics, monitor_endpoint
+from mlops import setup_metrics, setup_tracing, monitor_endpoint
+
+def _setup_middlewares(app: FastAPI) -> None:
+    """Setup all middlewares for the app."""
+    
+    # Trace ID middleware - must be first to ensure all logs have trace_id
+    @app.middleware("http")
+    async def add_trace_id_middleware(request: Request, call_next):
+        trace_id = request.headers.get("X-Trace-ID") or str(uuid.uuid4())
+        trace_id_ctx.set(trace_id)
+        response = await call_next(request)
+        response.headers["X-Trace-ID"] = trace_id
+        return response
+    
+    # CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
-app = FastAPI(
-    title="DSM-5 & Hospital Chatbot",
-    description="RAG chatbot with hospital and DSM-5 data",
-)
-setup_metrics(app=app)
+def _setup_monitoring(app: FastAPI) -> None:
+    """Setup monitoring tools (tracing, metrics)."""
+    setup_tracing(
+        app=app,
+        service_name=AppConfig.APP_NAME,
+        jaeger_host=AppConfig.JAEGER_HOST,
+        jaeger_port=AppConfig.JAEGER_PORT
+    )
+    setup_metrics(app=app)
 
-# CORS middleware for frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-# Initialize agent
-agent = HospitalRAGAgent(
-    llm_model="google",
-    embedding_model="google",
-    user_id="default"
-)
-# Initialize tools
-dsm5_tool = DSM5RetrievalTool(embedding_model="google", top_k=10)
-cypher_tool = CypherTool(llm_model="google")
+def _initialize_tools() -> tuple:
+    """Initialize all tools and agents."""
+    agent = HospitalRAGAgent(
+        llm_model="google",
+        embedding_model="google",
+        user_id="default"
+    )
+    dsm5_tool = DSM5RetrievalTool(embedding_model="google", top_k=10)
+    cypher_tool = CypherTool(llm_model="google")
+    return agent, dsm5_tool, cypher_tool
+
+
+def create_app() -> FastAPI:
+    """Application factory: creates and configures the FastAPI app."""
+    app = FastAPI(
+        title="DSM-5 & Hospital Chatbot",
+        description="RAG chatbot with hospital and DSM-5 data",
+    )
+    
+    # Setup in order
+    _setup_monitoring(app)
+    _setup_middlewares(app)
+    
+    return app
+
+
+# Create app instance
+app = create_app()
+# Initialize tools (lazy initialization can be done in startup event if needed)
+agent, dsm5_tool, cypher_tool = _initialize_tools()
+
+@app.on_event("shutdown")
+def shutdown():
+    logger.info("Graceful shutdown started")
+    logger.complete()
 
 
 @app.get("/health")
 async def get_status():
+    logger.info("Health check requested")
     return {"status": "running", "service": "Hospital & DSM-5 Chatbot"}
 
 # ============================================================
@@ -63,6 +109,7 @@ async def chat(request: QueryRequest):
   Chat endpoint - returns full response.
   """
   try:
+    logger.info(f"Starting chat for query: {request.query}")
     result = await agent.ainvoke(query=request.query)
     return {
         "query": request.query,
@@ -80,6 +127,7 @@ async def stream_chat(request: QueryRequest):
   """
   Streaming endpoint - returns results as they come.
   """
+  logger.info(f"Starting streaming chat for query: {request.query}")
   async def event_generator():
     try:
       async for chunk in agent.astream(query=request.query):

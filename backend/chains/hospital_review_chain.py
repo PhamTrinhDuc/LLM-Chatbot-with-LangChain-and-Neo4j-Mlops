@@ -51,7 +51,7 @@ class HospitalReviewChain:
             url=self.neo4j_uri,
             username=self.neo4j_user,
             password=self.neo4j_password,
-            index_name=AppConfig.INDEX_NAME,
+            index_name=AppConfig.INDEX_NAME_NEO4J,
             node_label="Review",
             text_node_properties=TEXT_NODE_PROPERTIES,
             embedding_node_property="embedding"
@@ -124,8 +124,7 @@ class HospitalReviewChain:
           Tuple of (answer, source_documents)
       """
       try:
-        chain = self._get_review_chain()
-        docs = await chain.retriever.ainvoke(input=query)
+        docs = await self.review_chain.retriever.ainvoke(input=query)
         return self._process_response(query, docs)
       except Exception as e:
         logger.error(f"Error in ainvoke: {str(e)}")

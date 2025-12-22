@@ -82,9 +82,10 @@ services:
   # any modification to existing users.
   setup:
     build:
-      context: setup/
+      context: elk/setup/
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
+    container_name: setup
     init: true
     volumes:
       - setup:/state:Z
@@ -99,7 +100,7 @@ services:
 
   elasticsearch:
     build:
-      context: elasticsearch/
+      context: elk/elasticsearch/
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     container_name: elasticsearch
@@ -110,7 +111,7 @@ services:
       retries: 5
       start_period: 60s
     volumes:
-      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
+      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
       - elasticsearch:/usr/share/elasticsearch/data:z
     ports:
       - "9200:9200"
@@ -127,13 +128,45 @@ services:
     networks:
       - chatbot-network
 
-  kibana:
+  filebeat:
     build:
-      context: kibana/
+      context: elk/filebeat
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
+    # Run as 'root' instead of 'filebeat' (uid 1000) to allow reading
+    # 'docker.sock' and the host's filesystem.
+    container_name: filebeat
+    user: root
+    command:
+      # Log to stderr.
+      - -e
+      # Disable config file permissions checks. Allows mounting
+      # 'config/filebeat.yml' even if it's not owned by root.
+      # see: https://www.elastic.co/guide/en/beats/libbeat/current/config-file-permissions.html
+      - --strict.perms=false
     volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+      - ./elk/filebeat/config/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro,Z
+      - type: bind
+        source: /var/lib/docker/containers # nơi log nằm trong containers
+        target: /var/lib/docker/containers
+        read_only: true
+      - type: bind
+        source: /var/run/docker.sock # biết container nào đang chạy
+        target: /var/run/docker.sock
+        read_only: true
+    env_file:
+      - .env
+    networks:
+      - chatbot-network
+
+  kibana:
+    build:
+      context: elk/kibana/
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    container_name: kibana
+    volumes:
+      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
       - "5601:5601"
     environment:
@@ -142,6 +175,7 @@ services:
       - chatbot-network
     depends_on:
       - elasticsearch
+
   # =============================================================
   # ==================== CORE BACKEND & FRONTEND ================
   # =============================================================
@@ -158,6 +192,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    
+    stop_grace_period: 40s
     env_file:
       - .env
     networks:
@@ -323,3 +359,8 @@ networks:
     name: chatbot-network
 
 # a9b74df60c52428cb2d550471c05d733
+
+
+# docker compose up -d
+# docker compose -f extensions/filebeat/filebeat-compose.yml up -d
+# stop all docker container but don't remove its: docker stop $(docker ps -q)

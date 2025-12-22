@@ -113,7 +113,7 @@ class HospitalCypherChain:
       """
       try:
         chain = self._get_cypher_chain()
-        response = await chain.invoke(input={"query": query})
+        response = await chain.ainvoke(input={"query": query})
         
         generated_cypher = response["intermediate_steps"][0]["query"]
         answer = response.get("result")
