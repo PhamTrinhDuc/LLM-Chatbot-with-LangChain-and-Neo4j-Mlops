@@ -19,11 +19,13 @@ class AppConfig:
   # LLM AND EMBEDDING MODEL CONFIGURATION
   OPENAI_LLM: str = "gpt-4o-mini"
   GOOGLE_LLM: str = "models/gemini-2.5-flash-lite"
+  GROQ_LLM: str = "llama-3.3-70b-versatile"
   OPENAI_EMBEDDING: str="text-embedding-3-small"
   GOOGLE_EMBEDDING: str="models/gemini-embedding-001"
   HF_EMBEDDING_API: str = os.getenv("HF_EMBEDDING_API")
   OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
   GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY")
+  GROQ_API_KEY: str = os.getenv("GROQ_API_KEY")
 
   # DATABASE CONFIGURATION
   NEO4J_URI: str = os.getenv("NEO4J_URI")
@@ -61,10 +63,17 @@ class AppConfig:
   PAGE_FOOTER_PATTERN = r'\b[Cc]hỉ sử dụng tài liệu'  # → Bỏ qua footer trang 
   SPLIT_SENTENCE_PATTERN = r'(?<=[.!?])\s+'
 
-
   # PATH DATA
-  DSM5_PATH: str = str(PROJET_ROOT / "data" / 'dsm-5-cac-tieu-chuan-chan-doan.pdf')
-  DSM5_CHUNKS_PATH: str = str(BACKEND_DIR.parent / "data" / "dsm5_chunks.json")
+  HOSPITAL_PATH: str = str(PROJET_ROOT / "data")
+  DSM5_PATH: str = str(PROJET_ROOT / "data" / "dsm5" / 'dsm-5-cac-tieu-chuan-chan-doan.pdf')
+  DSM5_CHUNKS_PATH: str = str(PROJET_ROOT / "dsm5" / "data" / "dsm5_chunks.json")
+
+  DSM5_DATASET_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "dataset" / "dsm5_dataset_eval.csv")
+  DSM5_RESULT_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "results" / "dsm5_result_eval.csv")
+
+  CYPHER_DATASET_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "dataset" / "cypher_dataset_eval.csv")
+  CYPHER_RESULT_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "results" / "cypher_result_eval.csv")
+
   LOG_DIR: str = str(BACKEND_DIR / "logs" / "app.log")
   
 
