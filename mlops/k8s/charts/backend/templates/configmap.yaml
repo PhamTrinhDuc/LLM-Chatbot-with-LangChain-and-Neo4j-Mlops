@@ -1,0 +1,12 @@
+# charts/backend-fastapi/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backend-app.fullname" . }}
+  labels: 
+    {{ include "backend-app.labels" . | nindent 4 }}
+data:
+  {{ range $key, $val := .Values.config }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  
