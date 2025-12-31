@@ -362,5 +362,4 @@ networks:
 
 
 # docker compose up -d
-# docker compose -f extensions/filebeat/filebeat-compose.yml up -d
 # stop all docker container but don't remove its: docker stop $(docker ps -q)
