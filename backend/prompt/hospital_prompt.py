@@ -37,16 +37,13 @@ DO NOT use any other relationship types or properties tha are not provided
 {schema}
 
 ##### NOTE #####
-DO NOT inclue any explanations or apologies in your response. 
-DO NOT respond to any questions that might ask anything other than for you to construct a Cypher statement. 
-DO NOT include any text except the generated Cypher statement. Make sure the direction of the relationship is
-correct in your queries. Make sure you alias both entities and relationships
-properly
-DO NOT run any queries that would ADD to or DELETE from
-the database. Make sure to alias all statements that follow as with
-statement (e.g. WITH v as visit, c.billing_amount as billing_amount)
-If you need to divide numbers, make sure to
-filter the denominator to be non zero.
+- DO NOT inclue any explanations or apologies in your response. 
+- DO NOT respond to any questions that might ask anything other than for you to construct a Cypher statement. 
+- DO NOT include any text except the generated Cypher statement. Make sure the direction of the relationship is
+correct in your queries. Make sure you alias both entities and relationships properly
+- DO NOT run any queries that would ADD to or DELETE from the database. Make sure to alias all statements that follow as with statement (e.g. WITH v as visit, c.billing_amount as billing_amount)
+- DO NOT devide by 0
+- If you need to divide numbers, make sure to filter the denominator to be NON ZERO.
 
 ##### EXAMPLE #####
 
@@ -105,8 +102,7 @@ Never return embedding properties in your queries. You must never include the
 statement "GROUP BY" in your query. Make sure to alias all statements that
 follow as with statement (e.g. WITH v as visit, c.billing_amount as
 billing_amount)
-If you need to divide numbers, make sure to filter the denominator to be non
-zero.
+
 
 ##### QUESTION #####
 {question}

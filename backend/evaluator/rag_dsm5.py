@@ -7,7 +7,10 @@ from ragas import evaluate
 from ragas.metrics import (
     LLMContextRecall,
     Faithfulness,
-    FactualCorrectness
+    FactualCorrectness, 
+    AnswerRelevancy, 
+    ContextPrecision, 
+    ContextRecall
 )
 from datasets import Dataset
 from chains.healthcare_chain import HealthcareRetriever
@@ -54,27 +57,33 @@ def rag_with_elasticsearch(question: str):
 
 def evaluate_rag(testset_df: pd.DataFrame):
   eval_data = {
-      "user_input": [],
-      "response": [],
-      "retrieved_contexts": [],
-      "reference": []
+    "user_input": [],
+    "response": [],
+    "retrieved_contexts": [],
+    "reference": []
   }
 
   for _, row in testset_df.iterrows():
-      answer, contexts = rag_with_elasticsearch(row['user_input'])
-      
-      eval_data["user_input"].append(row['user_input'])
-      eval_data["response"].append(answer)
-      eval_data["retrieved_contexts"].append(contexts)
-      eval_data["reference"].append(row.get('reference', ''))
+    answer, contexts = rag_with_elasticsearch(row['user_input'])
+    
+    eval_data["user_input"].append(row['user_input'])
+    eval_data["response"].append(answer)
+    eval_data["retrieved_contexts"].append(contexts)
+    eval_data["reference"].append(row.get('reference', ''))
 
   # Evaluate
   eval_dataset = Dataset.from_dict(eval_data)
   result = evaluate(
-      dataset=eval_dataset,
-      metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()]
+    dataset=eval_dataset,
+    metrics=[LLMContextRecall(), 
+            Faithfulness(), 
+            FactualCorrectness(), 
+            AnswerRelevancy(), 
+            ContextPrecision(), 
+            ContextRecall()]
   )
   return result
+
 
 if __name__ == "__main__": 
 #   contexts = rag_with_elasticsearch(question="Phân biệt rối loạn phát triển trí tuệ với rối loạn phổ tự kỷ như thế nào?")

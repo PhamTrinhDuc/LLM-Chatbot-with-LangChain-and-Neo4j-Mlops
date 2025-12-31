@@ -19,7 +19,7 @@ class AppConfig:
   # LLM AND EMBEDDING MODEL CONFIGURATION
   OPENAI_LLM: str = "gpt-4o-mini"
   GOOGLE_LLM: str = "models/gemini-2.5-flash-lite"
-  GROQ_LLM: str = "llama-3.3-70b-versatile"
+  GROQ_LLM: str = "moonshotai/kimi-k2-instruct-0905" # openai/gpt-oss-120b
   OPENAI_EMBEDDING: str="text-embedding-3-small"
   GOOGLE_EMBEDDING: str="models/gemini-embedding-001"
   HF_EMBEDDING_API: str = os.getenv("HF_EMBEDDING_API")
@@ -66,7 +66,7 @@ class AppConfig:
   # PATH DATA
   HOSPITAL_PATH: str = str(PROJET_ROOT / "data")
   DSM5_PATH: str = str(PROJET_ROOT / "data" / "dsm5" / 'dsm-5-cac-tieu-chuan-chan-doan.pdf')
-  DSM5_CHUNKS_PATH: str = str(PROJET_ROOT / "dsm5" / "data" / "dsm5_chunks.json")
+  DSM5_CHUNKS_PATH: str = str(PROJET_ROOT / "data" / "dsm5" / "dsm5_chunks.json")
 
   DSM5_DATASET_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "dataset" / "dsm5_dataset_eval.csv")
   DSM5_RESULT_EVAL_PATH: str = str(PROJET_ROOT / "data" / "evaluate" / "results" / "dsm5_result_eval.csv")

@@ -52,8 +52,9 @@ def _json_serializer(record):
 # === 4. Setup logger — chỉ chạy 1 lần ===
 def _setup_logger():
     _logger.remove()  # Xóa default handler
-
-    # Lấy config từ env (hoặc hardcode nếu chưa có AppConfig)
+    # Patch ngay sau khi remove để đảm bảo mọi log đều có trace_id
+    patched_logger = _logger.patch(_add_trace_id)
+    
     env = AppConfig.ENV_LOG
     log_dir = AppConfig.LOG_DIR
     os.makedirs(os.path.dirname(log_dir), exist_ok=True)
@@ -70,7 +71,7 @@ def _setup_logger():
                 sys.stderr.write(f"LOG_SERIALIZE_ERROR: {e}\n")
                 sys.stderr.flush()
 
-        _logger.add(
+        patched_logger.add(
             json_sink,
             level="INFO",
             enqueue=False,       # tắt 
@@ -78,21 +79,27 @@ def _setup_logger():
             diagnose=False,
         )
     else:
-        _logger.add(
+        # Sử dụng custom format function để an toàn hơn
+        def dev_format(record):
+            trace_id = record["extra"].get("trace_id", "none")
+            return (
+                "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+                "<level>{level: <8}</level> | "
+                "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+                f"<level>{{message}}</level> - trace_id={trace_id}\n"
+            )
+        
+        patched_logger.add(
             log_dir,
             rotation="50 MB",
             retention="3 days",
             compression="zip",
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-                   "<level>{level: <8}</level> | "
-                   "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-                   "<level>{message}</level> - trace_id={extra[trace_id]}",
+            format=dev_format,
             level="DEBUG",
             enqueue=False,
         )
 
-    # Patch 1 lần duy nhất — đảm bảo trace_id được inject trước khi vào queue/thread
-    return _logger.patch(_add_trace_id)
+    return patched_logger
 
 
 # === 5. Export instance duy nhất ===

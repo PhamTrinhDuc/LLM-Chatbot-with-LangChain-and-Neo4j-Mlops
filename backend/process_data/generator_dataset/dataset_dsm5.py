@@ -4,24 +4,27 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 import time
 import json
+from groq import Groq
 import pandas as pd
 from tqdm import tqdm
-from ragas.testset import TestsetGenerator
-from ragas.testset.synthesizers import default_query_distribution
+from typing import List
+from pydantic import BaseModel, Field
 from langchain_core.documents import Document
-from utils import ModelFactory, AppConfig
-
+from utils import AppConfig
+from prompt import DSM5_SYSTEM_GENERATION_TEMPLATE
 
 DSM5_CHUNKS_PATH = AppConfig.DSM5_CHUNKS_PATH
 DSM5_DATASET_EVAL_PATH = AppConfig.DSM5_DATASET_EVAL_PATH
+groq = Groq(api_key=AppConfig.GROQ_API_KEY)
 
-model = ModelFactory.get_llm_model(llm_model="groq")
-embedding_model = ModelFactory.get_embedding_model(embedding_model="google")
 
-generator  = TestsetGenerator(
-  llm=model, 
-  embedding_model=embedding_model,
-)
+class Dsm5Generation(BaseModel): 
+  question: str = Field(..., description="Question for user")
+  ground_truth: str = Field(..., description="the correct answer to the question based on the context")
+
+class Dsm5Dataset(BaseModel): 
+   dataset: List[Dsm5Generation]
+
 
 def transform_chunks(chunks: list[dict]) -> list[Document]: 
   documents = []
@@ -42,77 +45,60 @@ def transform_chunks(chunks: list[dict]) -> list[Document]:
   return documents
       
 
-def generate_dataset(chunks: list[Document], num_questions: int=20):
-  try:
-    testset = generator.generate_with_langchain_docs(
-      documents=chunks, 
-      testset_size=num_questions, 
-      transforms=None,
-      query_distribution=default_query_distribution
-    )
-      
-    testset_df = testset.to_pandas()
-  
-  except Exception as e: 
-    print(f"⚠️ Ragas generation failed: {e}")
-    print("🔄 Fallback to manual generation...")
-    
-    system_prompt = """You are an expert in creating test questions.
-    Task: Read the passage and create 1 specific question that can be answered from the passage.
-
-    Requirements:
-    - Question must be SPECIFIC and answerable from the context
-    - Answer must be ACCURATE based on the content
-    - Vary question types: What, How, Why, When, Define, Explain, etc.
-    - Only using Vietnamese language to generate
-
-    Return ONLY a valid JSON object (no markdown, no explanation):
-    {"question": "your question here", "ground_truth": "complete answer here"}"""
+def generate_dataset(chunks: list[Document], num_samples: int=20, num_pairs_generated: int=2):
+    print("🔄 Starting manual generation...")
     
     dataset = []
     
     # Sample random chunks
     import random
-    if len(chunks) > num_questions:
-        selected_chunks = random.sample(chunks, num_questions)
+    if len(chunks) > num_samples:
+        selected_chunks = random.sample(chunks, num_samples)
     else:
         selected_chunks = chunks
     
     for chunk in tqdm(selected_chunks, desc="Generating QA"):
       try:
+        
+        system_prompt = DSM5_SYSTEM_GENERATION_TEMPLATE.format(
+          num_pairs=num_pairs_generated,
+          passage=selected_chunks
+        )
         messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Passage:\n\n{chunk.page_content}"}
+          {"role": "system", "content": system_prompt},
         ]
         
-        response = model.invoke(messages)
+        response = groq.chat.completions.create(
+          model=AppConfig.GROQ_LLM, 
+          messages=messages, 
+          temperature=0.3,
+          response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "cypher_query_generation",
+                "schema": Dsm5Dataset.model_json_schema()
+            }
+          }
+        )
+
         time.sleep(1) # tránh rate limit
+        response_json = json.loads(response.choices[0].message.content or "{}")
+        print(response_json)
         
-        # Clean response - remove markdown code blocks if present
-        content = response.content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-        
-        qa_data = json.loads(content)
-        
-        dataset.append({
-          "user_input": qa_data["question"],
-          "reference": qa_data["ground_truth"],
-          "retrieved_contexts": [chunk.page_content]
-        })
+        for qa_data in response_json['dataset']:
+          dataset.append({
+            "user_input": qa_data["question"],
+            "reference": qa_data["ground_truth"],
+            "retrieved_contexts": [chunk.page_content]
+          })
           
       except Exception as e:
-          print(f"⚠️ Error parsing response: {e}")
-          print(f"Response content: {response.content[:200]}")
-          continue
+        print(f"⚠️ Error parsing response: {e}")
+        print(f"Response content: {response.content[:200]}")
+        continue
     
     testset_df = pd.DataFrame(data=dataset)
-  return testset_df
+    return testset_df
 
 
 if __name__ == "__main__":
@@ -120,5 +106,7 @@ if __name__ == "__main__":
     chunks_data = json.load(f)
 
   documents = transform_chunks(chunks=chunks_data)
-  testset_df = generate_dataset(chunks=documents, num_questions=100)
-  testset_df.to_csv(DSM5_DATASET_EVAL_PATH, index=False)
+  testset_df = generate_dataset(chunks=documents, num_samples=3, num_pairs_generated=2)
+  print(testset_df)
+
+  # testset_df.to_csv(DSM5_DATASET_EVAL_PATH, index=False)

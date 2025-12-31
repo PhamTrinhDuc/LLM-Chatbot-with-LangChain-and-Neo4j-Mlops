@@ -1,0 +1,93 @@
+Unnamed: 0,question,cypher_gt,cypher_gen,answer,equiv,jacc
+0,Bệnh viện nào ở tiểu bang NC có số lượt khám nhiều nhất trong năm 2023?,"MATCH (h:Hospital)<-[:AT]-(v:Visit) WHERE h.state_name = 'NC' AND v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01' WITH h.name AS hospital_name, COUNT(v) AS visit_count RETURN hospital_name, visit_count ORDER BY visit_count DESC LIMIT 1","MATCH (h:Hospital)<-[:AT]-(v:Visit)
+WHERE h.state_name = 'NC' AND v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01'
+WITH h.name AS hospital_name, COUNT(v) AS visit_count
+RETURN hospital_name, visit_count
+ORDER BY visit_count DESC
+LIMIT 1","Bệnh viện có số lượt khám nhiều nhất ở tiểu bang NC trong năm 2023 là Rush, Owens and Johnson với 62 lượt khám.",True,1.0
+1,Tổng số bác sĩ đang được bệnh viện tại Florida thuê là bao nhiêu?,MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician) WHERE h.state_name = 'FL' RETURN COUNT(DISTINCT phy) AS total_physicians,"MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician)
+WHERE h.state_name = 'FL'
+RETURN COUNT(DISTINCT phy) AS total_physicians","Hiện tại, tổng cộng có 496 bác sĩ đang được các bệnh viện tại Florida thuê.",True,1.0
+2,Trung bình mỗi bác sĩ điều trị bao nhiêu ca khám có loại nhập viện là Elective tại bệnh viện Cigna?,"MATCH (p:Payer)<-[:COVERED_BY]-(v:Visit)-[:TREATS]->(phy:Physician) WHERE p.name = 'Cigna' AND v.admission_type = 'Electie' WITH phy, COUNT(v) AS cases RETURN AVG(cases) AS avg_elective_cases_per_physician","MATCH (phy:Physician)-[:TREATS]->(v:Visit)-[:COVERED_BY]->(p:Payer)
+WHERE p.name = 'Cigna' AND v.admission_type = 'Elective'
+WITH phy, COUNT(v) AS elective_visits
+RETURN AVG(elective_visits) AS avg_elective_visits_per_physician","Trung bình mỗi bác sĩ tại bệnh viện Cigna điều trị khoảng 1,79 ca khám có loại nhập viện là Elective.",False,0.0
+3,Bác sĩ nào có mức lương cao nhất trong các bệnh viện ở Texas và họ từng học trường y nào?,"MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician) WHERE h.state_name = 'TX' RETURN phy.name AS physician_name, phy.salary AS salary, phy.school AS medical_school ORDER BY phy.salary DESC LIMIT 1","MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician)
+WHERE h.state_name = 'TX'
+WITH phy
+ORDER BY phy.salary DESC
+LIMIT 1
+RETURN phy.name AS physician_name, phy.salary AS salary, phy.school AS medical_school","Bác sĩ có mức lương cao nhất trong các bệnh viện ở Texas là Michael Delgado, với mức lương khoảng 394,259 USD. Ông từng học tại Trường Y Pritzker thuộc Đại học Chicago.",False,0.0
+4,Tỷ lệ phần trăm lượt khám có kết quả xét nghiệm Abnormal tại bệnh viện UnitedHealthcare ở Georgia là bao nhiêu?,"MATCH (p:Payer)<-[:COVERED_BY]-(v:Visit)-[:AT]->(h:Hospital) WHERE p.name = 'UnitedHealthcare' AND h.state_name = 'GA' WITH COUNT(v) AS total_visits, SUM(CASE WHEN v.test_results = 'Abnormal' THEN 1 ELSE 0 END) AS abnormal_count RETURN toFloat(abnormal_count) / toFloat(total_visits) * 100 AS abnormal_percentage","MATCH (h:Hospital)<-[:AT]-(v:Visit)-[:COVERED_BY]->(p:Payer)
+WHERE p.name = 'UnitedHealthcare' AND h.state_name = 'GA'
+WITH COUNT(v) AS total_visits,
+     SUM(CASE WHEN v.test_results = 'Abnormal' THEN 1 ELSE 0 END) AS abnormal_count
+RETURN toFloat(abnormal_count) / toFloat(total_visits) * 100 AS abnormal_percentage","Tỷ lệ phần trăm lượt khám có kết quả xét nghiệm Abnormal tại bệnh viện UnitedHealthcare ở Georgia là 35,13%.",True,1.0
+5,Tìm bệnh nhân đã từng nhập viện khẩn cấp nhiều nhất và liệt kê số lần nhập viện khẩn cấp của họ.,"MATCH (p:Patient)-[:HAS]->(v:Visit) WHERE v.admission_type = 'Emergency' RETURN p.name AS patient_name, COUNT(v) AS emergency_visits ORDER BY emergency_visits DESC LIMIT 1","MATCH (p:Patient)-[:HAS]->(v:Visit)
+WHERE v.admission_type = 'Emergency'
+WITH p, COUNT(v) AS emergency_visits
+RETURN p.name AS patient_name, emergency_visits
+ORDER BY emergency_visits DESC
+LIMIT 1","Bệnh nhân từng nhập viện khẩn cấp nhiều nhất là Jennifer Gonzalez, với tổng cộng 4 lần nhập viện khẩn cấp.",True,1.0
+6,Liệt kê các bệnh nhân nữ đã điều trị tại bệnh viện ở Georgia và có chẩn đoán chính là 'Hypertension'.,MATCH (p:Patient)-[:HAS]->(v:Visit)-[:AT]->(h:Hospital) WHERE p.sex = 'F' AND h.state_name = 'GA' AND v.primary_diagnosis = 'Hypertension' RETURN DISTINCT p.name AS patient_name ORDER BY patient_name,"MATCH (p:Patient)-[:HAS]->(v:Visit)-[:AT]->(h:Hospital)
+WHERE p.sex = 'F' AND h.state_name = 'GA' AND v.primary_diagnosis = 'Hypertension'
+RETURN DISTINCT p.name AS patient_name","Dựa trên kết quả truy vấn, tôi không tìm thấy bệnh nhân nữ nào đã điều trị tại bệnh viện ở Georgia và có chẩn đoán chính là 'Hypertension'.",True,1.0
+7,Tính thời gian trung bình (ngày) từ ngày nhập viện đến ngày xuất viện của các bệnh nhân đã điều trị tại bệnh viện 'Mayo Clinic'.,"MATCH (p:Patient)-[:HAS]->(v:Visit)-[:AT]->(h:Hospital) WHERE h.name = 'Mayo Clinic' AND v.discharge_date IS NOT NULL WITH v, duration.between(date(v.admission_date), date(v.discharge_date)).days AS days RETURN AVG(days) AS avg_length_of_stay","MATCH (v:Visit)-[:AT]->(h:Hospital)
+WHERE h.name = 'Mayo Clinic' AND v.discharge_date IS NOT NULL
+WITH duration.between(date(v.admission_date), date(v.discharge_date)).days AS stay_length
+RETURN avg(stay_length) AS avg_length_of_stay",Hiện tại không có dữ liệu về thời gian trung bình (ngày) từ ngày nhập viện đến ngày xuất viện của các bệnh nhân đã điều trị tại bệnh viện 'Mayo Clinic'.,True,1.0
+8,Tìm bác sĩ đã điều trị cho nhiều bệnh nhân nam nhất và hiển thị số bệnh nhân nam đó.,"MATCH (phy:Physician)-[:TREATS]->(v:Visit)<-[:HAS]-(p:Patient) WHERE p.sex = 'M' RETURN phy.name AS physician_name, COUNT(DISTINCT p) AS male_patients ORDER BY male_patients DESC LIMIT 1","MATCH (phy:Physician)-[:TREATS]->(v:Visit)<-[:HAS]-(p:Patient)
+WHERE p.sex = 'M'
+WITH phy, COUNT(DISTINCT p) AS male_patient_count
+RETURN phy.name AS physician_name, male_patient_count
+ORDER BY male_patient_count DESC
+LIMIT 1","Dựa trên kết quả truy vấn, bác sĩ đã điều trị cho nhiều bệnh nhân nam nhất là **Dr. Smith** với tổng cộng **150** bệnh nhân nam.",True,1.0
+9,Liệt kê các bệnh nhân đã từng có kết quả xét nghiệm 'Abnormal' trong các lần nhập viện và hiển thị tên bệnh nhân cùng ngày nhập viện tương ứng.,"MATCH (p:Patient)-[:HAS]->(v:Visit) WHERE v.test_results = 'Abnormal' RETURN p.name AS patient_name, v.admission_date AS admission_date ORDER BY admission_date DESC","MATCH (p:Patient)-[:HAS]->(v:Visit)
+WHERE v.test_results = 'Abnormal'
+RETURN p.name AS patient_name, v.admission_date AS admission_date","Dưới đây là danh sách các bệnh nhân từng có kết quả xét nghiệm “Abnormal” trong các lần nhập viện, kèm ngày nhập viện tương ứng:
+
+- Antonio Frederick – 2 tháng 5 năm 2020  
+- Patrick Parker – 20 tháng 8 năm 2020  
+- Charles Horton – 22 tháng 3 năm 2021  
+- Ryan Hayes – 17 tháng 12 năm 2020  
+- Amy Roberts – 13 tháng 4 năm 2021",False,0.0
+10,Tổng chi phí khám chữa bệnh của bệnh nhân nữ tại các bệnh viện Florida được bảo hiển nào chi trả nhiều nhất?,"MATCH (h:Hospital {state_name:'FL'})<-[:AT]-(v:Visit)-[:COVERED_BY]->(p:Payer)<-[:COVERED_BY]-(v2:Visit)-[:HAS]-(pa:Patient {sex:'F'})
+WITH p.name AS payer, COUNT(DISTINCT v2) AS visit_count
+RETURN payer, visit_count
+ORDER BY visit_count DESC
+LIMIT 1","MATCH (p:Patient)-[:HAS]->(v:Visit)-[:COVERED_BY]->(py:Payer), (v)-[:AT]->(h:Hospital)
+WHERE p.sex = 'F' AND h.state_name = 'FL'
+WITH py.name AS payer, SUM(v.billing_amount) AS total
+RETURN payer, total
+ORDER BY total DESC
+LIMIT 1",Tôi không có thông tin để trả lời câu hỏi này.,True,1.0
+11,Bác sĩ nào có lương cao nhất trong các ca điều trị được UnitedHealthcare thanh toán?,"MATCH (phy:Physician)-[:TREATS]->(v:Visit)-[:COVERED_BY]->(p:Payer {name:'UnitedHealthcare'})
+WITH DISTINCT phy.name AS physician, phy.salary AS salary
+RETURN physician, salary
+ORDER BY salary DESC
+LIMIT 1","MATCH (phy:Physician)-[:TREATS]->(v:Visit)-[:COVERED_BY]->(p:Payer)
+WHERE p.name = 'UnitedHealthcare'
+RETURN phy.name AS physician_name, phy.salary AS salary
+ORDER BY salary DESC
+LIMIT 1","Bác sĩ có lương cao nhất trong các ca điều trị được UnitedHealthcare thanh toán là Michael Delgado, với mức lương 394.259,01.",True,1.0
+12,Tỷ lệ ca khám Elective so với Emergency ở bệnh viện có tên chứa từ 'General' là bao nhiêu?,"MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician)-[:TREATS]->(v:Visit)
+WHERE h.name CONTAINS 'General'
+WITH COUNT(CASE WHEN v.admission_type='Elective' THEN 1 END) AS elective,
+     COUNT(CASE WHEN v.admission_type='Emergency' THEN 1 END) AS emergency
+WITH elective, emergency, CASE WHEN emergency=0 THEN 0 ELSE toFloat(elective)/toFloat(emergency) END AS ratio
+RETURN ratio","MATCH (h:Hospital)<-[:AT]-(v:Visit)
+WHERE h.name CONTAINS 'General'
+WITH COUNT(CASE WHEN v.admission_type = 'Elective' THEN 1 END) AS elective,
+     COUNT(CASE WHEN v.admission_type = 'Emergency' THEN 1 END) AS emergency
+RETURN toFloat(elective) / toFloat(emergency) AS ratio",Kết quả truy vấn cho thấy tỷ lệ ca khám Elective so với Emergency ở bệnh viện có tên chứa từ 'General' là NaN (không xác định được).,False,0.0
+13,"Trong năm 2023, tổng số ca khám trạng thái DISCHARGED được Cigna chi trả tại North Carolina là bao nhiêu?","MATCH (h:Hospital {state_name:'NC'})<-[:AT]-(v:Visit {status:'DISCHARGED'})-[:COVERED_BY]->(p:Payer {name:'Cigna'})
+WHERE v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01'
+RETURN COUNT(v) AS total_discharged","MATCH (h:Hospital)<-[:AT]-(v:Visit)-[:COVERED_BY]->(p:Payer)
+WHERE h.state_name = 'NC' AND p.name = 'Cigna' AND v.status = 'DISCHARGED' AND v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01'
+RETURN COUNT(v) AS total_discharged_visits","Trong năm 2023, tổng số ca khám trạng thái DISCHARGED được Cigna chi trả tại North Carolina là 65 ca.",False,0.0
+14,Bệnh nhân có nhóm máu AB đã tiêu tốn bao nhiêu ca khám được Blue Cross chi trả trong các bệnh viện Georgia?,"MATCH (pa:Patient {blood_type:'AB'})-[:HAS]->(v:Visit)-[:COVERED_BY]->(p:Payer {name:'Blue Cross'}),
+      (v)-[:AT]->(h:Hospital {state_name:'GA'})
+RETURN COUNT(v) AS visits_count","MATCH (p:Patient)-[:HAS]->(v:Visit)-[:COVERED_BY]->(py:Payer),
+      (v)-[:AT]->(h:Hospital)
+WHERE p.blood_type = 'AB' AND py.name = 'Blue Cross' AND h.state_name = 'GA'
+RETURN COUNT(v) AS visit_count","Theo kết quả truy vấn, không có ca khám nào ở bệnh nhân nhóm máu AB được Blue Cross chi trả tại các bệnh viện Georgia.",False,0.0

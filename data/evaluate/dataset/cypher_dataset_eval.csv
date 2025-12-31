@@ -1,0 +1,33 @@
+question,cypher_gt
+Bệnh viện nào ở tiểu bang NC có số lượt khám nhiều nhất trong năm 2023?,"MATCH (h:Hospital)<-[:AT]-(v:Visit) WHERE h.state_name = 'NC' AND v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01' WITH h.name AS hospital_name, COUNT(v) AS visit_count RETURN hospital_name, visit_count ORDER BY visit_count DESC LIMIT 1"
+Tổng số bác sĩ đang được bệnh viện tại Florida thuê là bao nhiêu?,MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician) WHERE h.state_name = 'FL' RETURN COUNT(DISTINCT phy) AS total_physicians
+Trung bình mỗi bác sĩ điều trị bao nhiêu ca khám có loại nhập viện là Elective tại bệnh viện Cigna?,"MATCH (p:Payer)<-[:COVERED_BY]-(v:Visit)-[:TREATS]->(phy:Physician) WHERE p.name = 'Cigna' AND v.admission_type = 'Electie' WITH phy, COUNT(v) AS cases RETURN AVG(cases) AS avg_elective_cases_per_physician"
+Bác sĩ nào có mức lương cao nhất trong các bệnh viện ở Texas và họ từng học trường y nào?,"MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician) WHERE h.state_name = 'TX' RETURN phy.name AS physician_name, phy.salary AS salary, phy.school AS medical_school ORDER BY phy.salary DESC LIMIT 1"
+Tỷ lệ phần trăm lượt khám có kết quả xét nghiệm Abnormal tại bệnh viện UnitedHealthcare ở Georgia là bao nhiêu?,"MATCH (p:Payer)<-[:COVERED_BY]-(v:Visit)-[:AT]->(h:Hospital) WHERE p.name = 'UnitedHealthcare' AND h.state_name = 'GA' WITH COUNT(v) AS total_visits, SUM(CASE WHEN v.test_results = 'Abnormal' THEN 1 ELSE 0 END) AS abnormal_count RETURN toFloat(abnormal_count) / toFloat(total_visits) * 100 AS abnormal_percentage"
+Tìm bệnh nhân đã từng nhập viện khẩn cấp nhiều nhất và liệt kê số lần nhập viện khẩn cấp của họ.,"MATCH (p:Patient)-[:HAS]->(v:Visit) WHERE v.admission_type = 'Emergency' RETURN p.name AS patient_name, COUNT(v) AS emergency_visits ORDER BY emergency_visits DESC LIMIT 1"
+Liệt kê các bệnh nhân nữ đã điều trị tại bệnh viện ở Georgia và có chẩn đoán chính là 'Hypertension'.,MATCH (p:Patient)-[:HAS]->(v:Visit)-[:AT]->(h:Hospital) WHERE p.sex = 'F' AND h.state_name = 'GA' AND v.primary_diagnosis = 'Hypertension' RETURN DISTINCT p.name AS patient_name ORDER BY patient_name
+Tính thời gian trung bình (ngày) từ ngày nhập viện đến ngày xuất viện của các bệnh nhân đã điều trị tại bệnh viện 'Mayo Clinic'.,"MATCH (p:Patient)-[:HAS]->(v:Visit)-[:AT]->(h:Hospital) WHERE h.name = 'Mayo Clinic' AND v.discharge_date IS NOT NULL WITH v, duration.between(date(v.admission_date), date(v.discharge_date)).days AS days RETURN AVG(days) AS avg_length_of_stay"
+Tìm bác sĩ đã điều trị cho nhiều bệnh nhân nam nhất và hiển thị số bệnh nhân nam đó.,"MATCH (phy:Physician)-[:TREATS]->(v:Visit)<-[:HAS]-(p:Patient) WHERE p.sex = 'M' RETURN phy.name AS physician_name, COUNT(DISTINCT p) AS male_patients ORDER BY male_patients DESC LIMIT 1"
+Liệt kê các bệnh nhân đã từng có kết quả xét nghiệm 'Abnormal' trong các lần nhập viện và hiển thị tên bệnh nhân cùng ngày nhập viện tương ứng.,"MATCH (p:Patient)-[:HAS]->(v:Visit) WHERE v.test_results = 'Abnormal' RETURN p.name AS patient_name, v.admission_date AS admission_date ORDER BY admission_date DESC"
+Tổng chi phí khám chữa bệnh của bệnh nhân nữ tại các bệnh viện Florida được bảo hiển nào chi trả nhiều nhất?,"MATCH (h:Hospital {state_name:'FL'})<-[:AT]-(v:Visit)-[:COVERED_BY]->(p:Payer)<-[:COVERED_BY]-(v2:Visit)-[:HAS]-(pa:Patient {sex:'F'})
+WITH p.name AS payer, COUNT(DISTINCT v2) AS visit_count
+RETURN payer, visit_count
+ORDER BY visit_count DESC
+LIMIT 1"
+Bác sĩ nào có lương cao nhất trong các ca điều trị được UnitedHealthcare thanh toán?,"MATCH (phy:Physician)-[:TREATS]->(v:Visit)-[:COVERED_BY]->(p:Payer {name:'UnitedHealthcare'})
+WITH DISTINCT phy.name AS physician, phy.salary AS salary
+RETURN physician, salary
+ORDER BY salary DESC
+LIMIT 1"
+Tỷ lệ ca khám Elective so với Emergency ở bệnh viện có tên chứa từ 'General' là bao nhiêu?,"MATCH (h:Hospital)-[:EMPLOYS]->(phy:Physician)-[:TREATS]->(v:Visit)
+WHERE h.name CONTAINS 'General'
+WITH COUNT(CASE WHEN v.admission_type='Elective' THEN 1 END) AS elective,
+     COUNT(CASE WHEN v.admission_type='Emergency' THEN 1 END) AS emergency
+WITH elective, emergency, CASE WHEN emergency=0 THEN 0 ELSE toFloat(elective)/toFloat(emergency) END AS ratio
+RETURN ratio"
+"Trong năm 2023, tổng số ca khám trạng thái DISCHARGED được Cigna chi trả tại North Carolina là bao nhiêu?","MATCH (h:Hospital {state_name:'NC'})<-[:AT]-(v:Visit {status:'DISCHARGED'})-[:COVERED_BY]->(p:Payer {name:'Cigna'})
+WHERE v.admission_date >= '2023-01-01' AND v.admission_date < '2024-01-01'
+RETURN COUNT(v) AS total_discharged"
+Bệnh nhân có nhóm máu AB đã tiêu tốn bao nhiêu ca khám được Blue Cross chi trả trong các bệnh viện Georgia?,"MATCH (pa:Patient {blood_type:'AB'})-[:HAS]->(v:Visit)-[:COVERED_BY]->(p:Payer {name:'Blue Cross'}),
+      (v)-[:AT]->(h:Hospital {state_name:'GA'})
+RETURN COUNT(v) AS visits_count"
