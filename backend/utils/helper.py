@@ -43,7 +43,7 @@ def async_retry(max_retries: int = 3, delay: int = 1):
 
 class ModelFactory:
   @staticmethod
-  def get_llm_model(llm_model: Literal["google", "openai"]="google"): 
+  def get_llm_model(llm_model: Literal["google", "openai", "groq"]="google"): 
       
     try:
       if llm_model == "google": 
@@ -53,17 +53,26 @@ class ModelFactory:
           temperature=AppConfig.TEMPERATURE, 
           api_key=AppConfig.GOOGLE_API_KEY
         )
+      elif llm_model=="openai" : 
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(
+          model=AppConfig.OPENAI_LLM, 
+          temperature=AppConfig.TEMPERATURE, 
+          api_key=AppConfig.OPENAI_API_KEY
+        )
+      else: 
+        from langchain_groq import ChatGroq
+        llm = ChatGroq(
+          model=AppConfig.GROQ_LLM, 
+          temperature=AppConfig.TEMPERATURE, 
+          api_key=AppConfig.GROQ_API_KEY, 
+        )
+
+      return llm
+
     except Exception as e: 
       logger.error(f"Error initializing model {llm_model}: {str(e)}")
       raise ValueError(f"Error initializing model {llm_model}: {str(e)}")
-    
-    from langchain_openai import ChatOpenAI
-    llm = ChatOpenAI(
-      model=AppConfig.OPENAI_LLM, 
-      temperature=AppConfig.TEMPERATURE, 
-      api_key=AppConfig.OPENAI_API_KEY
-    )
-    return llm
   
   @staticmethod
   def get_embedding_model(embedding_model: Literal["google", "openai"]="openai"): 
