@@ -1,0 +1,9 @@
+apiVersion: v2 # -> helm 3
+name: chatbot-backend
+description: Helm chart for Chatbot backend FastAPI
+# Giá trị hợp lệ: "application" hoặc "library".
+# "application": chart có thể được cài đặt như một release (mặc định nếu không khai báo).
+# "library": chart chỉ chứa helper templates, không thể cài đặt trực tiếp như một release.
+type: application
+version: 0.1.0 # version của Helm Chart(tăng khi đổi chart)
+appVersion: "1.0.0" # version của image backend
