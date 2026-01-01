@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "backend-app.fullname" . }} # flow file _helpers.pkl
+  name: {{ include "chatbot-backend.fullname" . }} # flow file _helpers.pkl
   labels: 
-    {{ include "backend-app.labels" . | nindent 4 }} # flow file _helpers.pkl
+    {{ include "chatbot-backend.labels" . | nindent 4 }} # flow file _helpers.pkl
 
 spec:
   replicas: {{ .Values.replicaCount }}
   selector: 
     matchLabels: 
-      {{ include "backend-app.selectorLabels" . | nindent 6 }}
+      {{ include "chatbot-backend.selectorLabels" . | nindent 6 }}
   
   template:
     metadata:
-      labels: {{ include "backend-app.selectorLabels" . | nindent 8}}
+      labels: {{ include "chatbot-backend.selectorLabels" . | nindent 8}}
     spec:
       containers:
         - name: {{ .Chart.Name }}
@@ -24,7 +24,7 @@ spec:
               containerPort: 8000
           envFrom: 
             - configMapRef:
-                name: {{ include "backend-app.fullname" . }}
+                name: {{ include "chatbot-backend.fullname" . }}
             - secretRef: 
                 name: {{ .Values.secretName }}
           resources: {{ toYaml .Values.resources | nindent 12}}

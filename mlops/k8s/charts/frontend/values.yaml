@@ -1,0 +1,23 @@
+replicaCount: 1
+image:
+  repository: duc8504/ai-agent-frontend
+  tag: "1.0"
+  pullPolicy: IfNotPresent
+
+service: 
+  type: ClusterIP 
+  port: 8501 
+  nodePort: 30001
+
+resources:
+  limits: 
+    cpu: 100m
+    memory: 256Mi
+  
+  requests: 
+    cpu: 100m
+    memory: 256Mi
+
+secretName: chatbot-frontend-secret
+config: 
+  BACKEND_URL: http://chatbot-backend:8000

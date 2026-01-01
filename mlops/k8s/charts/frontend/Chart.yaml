@@ -1,0 +1,6 @@
+apiVersion: v2 # -> helm 3
+name: chatbot-frontend
+description: Helm chart for Chatbot frontend Streamlit
+type: application
+version: 0.1.0 # version Helm Chart
+appVersion: "1.0.0" # version của image frontend
