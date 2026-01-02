@@ -2,10 +2,12 @@ import os
 import sys
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from typing import Literal
 from langchain import hub
 from langchain.agents import AgentExecutor, Tool, create_openai_functions_agent
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain.memory import ConversationBufferWindowMemory
+from langchain_community.chat_message_histories import FileChatMessageHistory
 from tools import (
   CypherTool, 
   ReviewTool, 
@@ -27,12 +29,14 @@ class HospitalRAGAgent:
                  llm_model: str,
                  embedding_model: str,  
                  user_id: str, 
+                 type_memory: Literal["file", 'redis']="file",
                  session_id: str=None):
         """Initialize the HospitalRAGAgent with tools and agent executor."""
         self.llm_model = llm_model
         self.embedding_model = embedding_model
         self.user_id = user_id  
         self.session_id = session_id
+        self.type_memory = type_memory
         self._agent_executor = None
         self._llm = None
         self._tools = None
@@ -43,18 +47,33 @@ class HospitalRAGAgent:
     def memory(self): 
       if self._memory is None:
         session_id = self.session_id or f"{self.user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-        self.message_history = RedisChatMessageHistory(session_id=session_id, 
-                                                       url=AppConfig.REDIS_URL, 
-                                                       ttl=AppConfig.TTL) # 24hours
-        self._memory = ConversationBufferWindowMemory(
-          chat_memory=self.message_history, 
-          memory_key="chat_history", 
-          return_messages=True, 
-          output_key="output", 
-          k=AppConfig.MEMORY_TOP_K
-        )
-      
+        
+        if self.type_memory == 'file': 
+           # File-based memory
+           file_chat_history = FileChatMessageHistory(
+              file_path=session_id + ".json"
+           )
+           self._memory = ConversationBufferWindowMemory(
+              chat_memory=file_chat_history,
+              memory_key="chat_history", 
+              return_messages=True, 
+              output_key="output", 
+              k=AppConfig.MEMORY_TOP_K
+           )
+        else:
+          # Redis-based memory
+          message_history = RedisChatMessageHistory(
+             session_id=session_id, 
+             url=AppConfig.REDIS_URL, 
+             ttl=AppConfig.TTL
+          )
+          self._memory = ConversationBufferWindowMemory(
+            chat_memory=message_history, 
+            memory_key="chat_history", 
+            return_messages=True, 
+            output_key="output", 
+            k=AppConfig.MEMORY_TOP_K
+          )
       return self._memory
     
     @property
@@ -225,13 +244,14 @@ if __name__ == "__main__":
     import asyncio
     # Test with class instance
     agent = HospitalRAGAgent(
-      llm_model="google",
+      llm_model="openai",
       embedding_model="openai",
       user_id=1, 
+      type_memory='file'
     )
     
     # Test query
-    query = "Bạn làm được gì ?"
+    query = "Tiểu bang nào có mức tăng phần trăm lớn nhất trong các lần khám Medicaid từ năm 2022 đến năm 2023"
     
     response = agent.invoke(query=query)
     print(f"Query: {query}\n")
