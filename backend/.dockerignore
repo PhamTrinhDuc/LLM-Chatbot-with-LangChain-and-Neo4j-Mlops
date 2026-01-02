@@ -82,6 +82,12 @@ docs
 chatbot.db 
 .env.dev
 .env.prod
+process_data
+notebook
+evaluator
+uv.lock
+.python-version
+tests
 
 # PyCharm
 .idea

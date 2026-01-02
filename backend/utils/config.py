@@ -39,8 +39,7 @@ class AppConfig:
   ELS_HOST: str = os.getenv("ELS_HOST")
   ELS_PORT: str = os.getenv("ELS_PORT")
 
-  JAEGER_HOST: str = os.getenv("JAEGER_HOST")
-  JAEGER_PORT: str = int(os.getenv("JAEGER_PORT")) # convert sang int nếu không sẽ bug 
+  JAEGER_ENDPOINT=os.getenv("JAEGER_ENDPOINT")
 
   # PARAMETERS
   VECTOR_SIZE: int=768

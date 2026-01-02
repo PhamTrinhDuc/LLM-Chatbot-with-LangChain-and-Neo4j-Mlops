@@ -54,3 +54,8 @@ curl http://192.168.49.2:32663/health # or brower in WSL
 cd mlops/k8s/charts/backend
 helm upgrade chatbot-backend .
 ```
+
+# 9. View list helm
+```bash
+helm list --all-namespaces
+```

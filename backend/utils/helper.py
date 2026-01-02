@@ -81,8 +81,7 @@ class ModelFactory:
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         embedding_model = GoogleGenerativeAIEmbeddings(
           model=AppConfig.GOOGLE_EMBEDDING, 
-          api_key=AppConfig.GOOGLE_API_KEY, 
-
+          api_key=AppConfig.GOOGLE_API_KEY,
         )
         return embedding_model
     except Exception as e: 
@@ -93,6 +92,7 @@ class ModelFactory:
     embedding_model = OpenAIEmbeddings(
       model=AppConfig.OPENAI_EMBEDDING, 
       api_key=AppConfig.OPENAI_API_KEY, 
+      dimensions=AppConfig.VECTOR_SIZE,
     )
     return embedding_model 
   
