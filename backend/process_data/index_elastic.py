@@ -346,7 +346,7 @@ def main():
   
   # Initialize indexer
   indexer = ElsIndexer(
-    model_name="hf_api",
+    model_name="openai",
     batch_size=args.batch_size,
     chunk_path=args.chunk_path
   )

@@ -9,7 +9,6 @@ Script để quản lý embeddings cho Neo4j vector index.
 import os
 import sys
 import argparse
-from typing import Optional
 from dotenv import load_dotenv
 
 # Add parent directory to path
@@ -17,7 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from neo4j import GraphDatabase
 from langchain_community.vectorstores import Neo4jVector
-from langchain_openai import OpenAIEmbeddings
+from utils.helper import ModelFactory
 
 
 class EmbeddingManager:
@@ -28,24 +27,19 @@ class EmbeddingManager:
         neo4j_uri: str,
         neo4j_user: str,
         neo4j_password: str,
-        openai_api_key: str,
-        embedding_model: str = "text-embedding-ada-002",
+        embedding_model: str = "openai",
     ):
         """Initialize EmbeddingManager."""
         self.neo4j_uri = neo4j_uri
         self.neo4j_user = neo4j_user
         self.neo4j_password = neo4j_password
         self.embedding_model = embedding_model
-        self.openai_api_key = openai_api_key 
         self.driver = GraphDatabase.driver(
             self.neo4j_uri, 
             auth=(self.neo4j_user, self.neo4j_password)
         )
-        self.embeddings = OpenAIEmbeddings(
-            model=self.embedding_model,
-            api_key=self.openai_api_key
-        )
-    
+        self.embeddings = ModelFactory.get_embedding_model(embedding_model=embedding_model)
+
     def delete_embeddings(
         self,
         node_label: str = "Review",
@@ -330,15 +324,14 @@ def main():
     args = parser.parse_args()
     
     # Load environment variables
-    load_dotenv(".env.dev")
+    load_dotenv("../.env.dev")
     
     # Initialize manager
     manager = EmbeddingManager(
         neo4j_uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"),
         neo4j_user=os.getenv("NEO4J_USER", "neo4j"),
         neo4j_password=os.getenv("NEO4J_PASSWORD", "bot-neo4j"),
-        embedding_model="text-embedding-ada-002",
-        openai_api_key=os.getenv("OPENAI_API_KEY")
+        embedding_model="openai",
     )
     
     try:

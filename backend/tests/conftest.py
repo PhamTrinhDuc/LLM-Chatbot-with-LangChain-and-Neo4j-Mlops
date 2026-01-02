@@ -3,48 +3,81 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from datetime import datetime
 import sys
 from pathlib import Path
 
 # Add backend to path
-backend_path = Path(__file__).parent.parent / "backend"
+backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-from backend.main import app, get_db
-from backend.app.database import Base, User, Conversation, Message
+from main import app, get_db
+from app.database import Base, User, Conversation, Message
 
 
-# In-memory database for testing
-DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Test database setup
+TEST_DB_PATH = Path(__file__).parent / "test_chatbot.db"
+TEST_DATABASE_URL = f"sqlite:///{TEST_DB_PATH}"
+
+test_engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
-def override_get_db():
+def get_test_db():
     """Override database dependency for testing."""
+    db = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
         yield db
     finally:
         db.close()
 
 
-@pytest.fixture(scope="function")
-def db():
-    """Create test database and tables."""
-    Base.metadata.create_all(bind=engine)
-    yield TestingSessionLocal()
-    Base.metadata.drop_all(bind=engine)
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_db_session():
+    """Setup test database schema once per session."""
+    Base.metadata.create_all(bind=test_engine)
+    yield
+    # Cleanup test database file after all tests
+    if TEST_DB_PATH.exists():
+        TEST_DB_PATH.unlink()
 
 
 @pytest.fixture(scope="function")
-def client(db: Session):
-    """Create test client with overridden database."""
-    app.dependency_overrides[get_db] = override_get_db
+def setup_db():
+    """Clear tables before each test."""
+    # Clear all data
+    session = TestingSessionLocal()
+    try:
+        for table in reversed(Base.metadata.sorted_tables):
+            session.execute(table.delete())
+        session.commit()
+    finally:
+        session.close()
     
-    client = TestClient(app)
-    yield client
+    yield
+    
+    # Clear all data after test
+    session = TestingSessionLocal()
+    try:
+        for table in reversed(Base.metadata.sorted_tables):
+            session.execute(table.delete())
+        session.commit()
+    finally:
+        session.close()
+
+
+@pytest.fixture(scope="function")
+def db(setup_db):
+    """Get test database session."""
+    return TestingSessionLocal()
+
+
+@pytest.fixture(scope="function")
+def client(setup_db):
+    """Create test client with overridden database."""
+    app.dependency_overrides[get_db] = get_test_db
+    
+    test_client = TestClient(app)
+    yield test_client
     
     app.dependency_overrides.clear()
 
@@ -60,20 +93,6 @@ def test_user(db: Session):
     db.commit()
     db.refresh(user)
     return user
-
-
-@pytest.fixture
-def test_user_2(db: Session):
-    """Create a second test user."""
-    user = User(
-        username="testuser2",
-        password_hash=User.hash_password("password456")
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
 
 @pytest.fixture
 def test_conversation(db: Session, test_user: User):

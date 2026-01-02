@@ -7,7 +7,7 @@ from neo4j import GraphDatabase
 from retry import retry
 import os
 from dotenv import load_dotenv
-from utils.helper import create_logger
+from utils.helper import logger
 
 load_dotenv(".env.dev")
 
@@ -25,7 +25,6 @@ REVIEWS_CSV_PATH = os.getenv("REVIEWS_CSV_PATH")
 GRAPHDB_NAME = os.getenv("GRAPHDB_NAME")
 NODES = ["Hospital", "Payer", "Physician", "Patient", "Visit", "Review"]
 
-logger = create_logger()
 driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
 
 @retry(tries=5, delay=2)

@@ -409,19 +409,24 @@ class HealthcareRetriever:
         query: str, 
         config: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
-      """
-      LangChain-compatible synchronous invoke.
-      """
-      config = config or {}
-      return self.hybrid_search(
-        query=query,
-        top_k=config.get("top_k", 10),
-        rrf_k=config.get("rrf_k", 60),
-        keyword_weight=config.get("keyword_weight", 1.0),
-        vector_weight=config.get("vector_weight", 1.2),
-        include_context=config.get("include_context", False)
-      )
-    
+        """
+        LangChain-compatible synchronous invoke.
+        """
+        try:
+            logger.info(f"Processing sync healthcare query: {query}")
+            config = config or {}
+            return self.hybrid_search(
+                query=query,
+                top_k=config.get("top_k", 10),
+                rrf_k=config.get("rrf_k", 60),
+                keyword_weight=config.get("keyword_weight", 1.0),
+                vector_weight=config.get("vector_weight", 1.2),
+                include_context=config.get("include_context", False)
+            )
+        except Exception as e: 
+            logger.error(f"Error during sync process healhcrare: {str(e)}")
+            raise
+          
     async def ainvoke(
         self, 
         query: str, 

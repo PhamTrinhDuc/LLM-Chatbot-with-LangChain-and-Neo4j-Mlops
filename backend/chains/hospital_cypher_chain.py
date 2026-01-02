@@ -90,6 +90,7 @@ class HospitalCypherChain:
           Tuple of (answer, generated_cypher_query)
       """
       try:
+        logger.info(f"Processing sync cypher query: {query}")
         chain = self._get_cypher_chain()
         response = chain.invoke(input={"query": query})
         
@@ -112,6 +113,7 @@ class HospitalCypherChain:
           Tuple of (answer, generated_cypher_query)
       """
       try:
+        logger.info(f"Processing async cypher query: {query}")
         chain = self._get_cypher_chain()
         response = await chain.ainvoke(input={"query": query})
         

@@ -107,6 +107,7 @@ class HospitalReviewChain:
             Tuple of (answer, source_documents)
         """
         try:
+          logger.info(f"Processing sync review query: {query}")
           docs = self.review_chain.retriever.invoke(input=query)
           return self._process_response(query, docs)
         except Exception as e:
@@ -124,6 +125,7 @@ class HospitalReviewChain:
           Tuple of (answer, source_documents)
       """
       try:
+        logger.info(f"Processing async review query: {query}")
         docs = await self.review_chain.retriever.ainvoke(input=query)
         return self._process_response(query, docs)
       except Exception as e:

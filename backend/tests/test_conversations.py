@@ -100,8 +100,6 @@ def test_update_nonexistent_conversation_title(client: TestClient):
 @pytest.mark.conversation
 def test_conversation_ordering(client: TestClient, test_user, db):
     """Test conversations are ordered by recent first."""
-    from database import Conversation
-    
     # Create multiple conversations
     for i in range(3):
         response = client.post(
