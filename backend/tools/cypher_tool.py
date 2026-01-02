@@ -70,4 +70,7 @@ class CypherTool(BaseTool):
           "generated_cypher": generated_cypher
       }
 
-
+if __name__ == "__main__": 
+  tool = CypherTool(llm_model="groq")
+  response = tool.invoke(input="Tiểu bang nào có mức tăng phần trăm lớn nhất trong các lần khám Medicaid từ năm 2022 đến năm 2023")
+  print(response)
