@@ -74,7 +74,7 @@ def generate_response(dataset_path: str, store_path: str = None) -> pd.DataFrame
             continue
 
     logger.info(
-        f"Percent sucess evaluate cypher query: {total_sucess/len(cypher_dataset):.2f}"
+        f"Percent sucess evaluate cypher query: {total_sucess / len(cypher_dataset):.2f}"
     )
     if store_path:
         cypher_dataset.to_csv(store_path, index=False)

@@ -185,8 +185,8 @@ def split_long_content(text: str) -> List[Dict[str, Any]]:
                     sub_chunks.append(
                         {
                             "content": sent_chunk,
-                            "sub_id": f"{sub_id}_p{j+1}",
-                            "sub_title": f"{sub_title} (phần {j+1})",
+                            "sub_id": f"{sub_id}_p{j + 1}",
+                            "sub_title": f"{sub_title} (phần {j + 1})",
                         }
                     )
             else:
@@ -222,8 +222,8 @@ def split_long_content(text: str) -> List[Dict[str, Any]]:
                 sub_chunks.append(
                     {
                         "content": sent_chunk,
-                        "sub_id": f"part_{j+1}",
-                        "sub_title": f"Phần {j+1}",
+                        "sub_id": f"part_{j + 1}",
+                        "sub_title": f"Phần {j + 1}",
                     }
                 )
 
@@ -538,7 +538,7 @@ def print_statistics(documents: List[Dict]) -> None:
     print("📊 THỐNG KÊ CHUNKS")
     print("=" * 60)
     print(f"Tổng số chunks: {len(documents)}")
-    print(f"Kích thước trung bình: {sum(sizes)/len(sizes):.0f} ký tự")
+    print(f"Kích thước trung bình: {sum(sizes) / len(sizes):.0f} ký tự")
     print(f"Kích thước nhỏ nhất: {min(sizes)} ký tự")
     print(f"Kích thước lớn nhất: {max(sizes)} ký tự")
 

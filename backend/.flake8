@@ -2,14 +2,14 @@
 max-line-length = 120
 extend-ignore = E203, W503
 # Bỏ qua các lỗi về import và biến mập mờ trên toàn bộ dự án để pass CI nhanh
-ignore = E402, E741, F541
+ignore = E402, E741, F541, E226
 
 per-file-ignores =
     # Bỏ qua lỗi unused import (F401) cho tất cả các file __init__
     **/__init__.py: F401
     
     # Bỏ qua lỗi unused import (F401) và import không ở đầu file (E402) cho thư mục tests
-    backend/tests/*.py: F401, E402
+    tests/*.py: F401, E402
     
     # File prompt bỏ qua dòng quá dài
     prompt/*.py: E501, W291
