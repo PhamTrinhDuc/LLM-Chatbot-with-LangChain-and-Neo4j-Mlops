@@ -56,7 +56,7 @@ def test_dsm5_hybrid_search_with_top_k(client: TestClient):
 @pytest.mark.dsm5
 def test_dsm5_hybrid_search_default_top_k(client: TestClient):
     """Test DSM-5 hybrid search uses default top_k if not provided."""
-    response = client.post("/dsm5/hybrid", json={"query": "schizophrenia"})
+    response = client.post("/dsm5/hybrid?query=schizophrenia")
 
     assert response.status_code in [200, 500]
 
@@ -97,7 +97,7 @@ def test_dsm5_criteria_search_with_criteria(client: TestClient):
 @pytest.mark.dsm5
 def test_dsm5_search_empty_query(client: TestClient):
     """Test DSM-5 search with empty query."""
-    response = client.post("/dsm5/search", json={"query": ""})
+    response = client.post("/dsm5/search?query=")
     # Should handle empty query gracefully
     assert response.status_code in [200, 400, 500]
 

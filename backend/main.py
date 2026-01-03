@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -162,7 +162,9 @@ async def stream_chat(request: QueryRequest):
 
 
 @app.post("/dsm5/search")
-async def dsm5_search(query):
+async def dsm5_search(
+    query: str = Query(..., description="Search query")
+):
     """Search DSM-5 diagnostic criteria."""
     try:
         response = await dsm5_tool._arun(query=query)
@@ -177,12 +179,13 @@ async def dsm5_search(query):
 
 
 @app.post("/dsm5/hybrid")
-async def dsm5_hybrid_search(query, top_k):
+async def dsm5_hybrid_search(
+    query: str = Query(..., description="Search query"),
+):
     """Hybrid search (keyword + semantic) for DSM-5."""
     try:
         results = dsm5_tool.retriever.hybrid_search(
             query=query,
-            top_k=top_k,
             keyword_weight=0.6,
             vector_weight=1.2,
             include_context=False,
@@ -199,7 +202,8 @@ async def dsm5_hybrid_search(query, top_k):
 
 
 @app.post("/dsm5/criteria")
-async def dsm5_criteria_search(disorder: str, criteria: str = None):
+async def dsm5_criteria_search(disorder: str = Query(..., description="Disorder name"),
+                               criteria: str = Query(None, description="Criterion text")):
     """Search DSM-5 by disorder name and criterion."""
     try:
         results = dsm5_tool.retriever.search_by_criteria(
