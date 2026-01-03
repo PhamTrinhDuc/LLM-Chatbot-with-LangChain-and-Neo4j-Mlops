@@ -1,5 +1,8 @@
 import os
 import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from datetime import datetime
 from typing import Literal
 
@@ -7,12 +10,17 @@ from langchain import hub
 from langchain.agents import AgentExecutor, Tool, create_openai_functions_agent
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_community.chat_message_histories import (
-    FileChatMessageHistory, RedisChatMessageHistory)
+    FileChatMessageHistory,
+    RedisChatMessageHistory,
+)
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from tools import (CypherTool, DSM5RetrievalTool, ReviewTool,
-                   get_current_wait_times, get_most_available_hospital)
+from tools import (
+    CypherTool,
+    DSM5RetrievalTool,
+    ReviewTool,
+    get_current_wait_times,
+    get_most_available_hospital,
+)
 from utils import AppConfig, ModelFactory, logger
 
 
@@ -239,8 +247,6 @@ class HospitalRAGAgent:
 
 
 if __name__ == "__main__":
-    import asyncio
-
     # Test with class instance
     agent = HospitalRAGAgent(
         llm_model="openai", embedding_model="openai", user_id=1, type_memory="file"
@@ -258,6 +264,7 @@ if __name__ == "__main__":
     # print("TEST 2: Streaming (progressive response)")
     # print("=" * 50)
 
+    # import asyncio
     # async def test_streaming():
     #     print(f"Query: {query}\n")
     #     async for chunk in agent.astream(query=query):

@@ -4,8 +4,15 @@ import hashlib
 import os
 from datetime import datetime
 
-from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Text,
-                        create_engine)
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 # Database path

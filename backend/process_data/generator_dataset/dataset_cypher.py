@@ -10,8 +10,10 @@ from pydantic import BaseModel, Field
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from prompt.evaluate import (SYSTEM_CYPHER_GENERATION_TEMPLATE,
-                             USER_CYPHER_GENERATION_TEMPLATE)
+from prompt.evaluate import (
+    SYSTEM_CYPHER_GENERATION_TEMPLATE,
+    USER_CYPHER_GENERATION_TEMPLATE,
+)
 from utils import AppConfig
 
 # Kết nối tới Neo4j

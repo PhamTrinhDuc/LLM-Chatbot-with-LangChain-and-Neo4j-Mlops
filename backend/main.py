@@ -11,8 +11,13 @@ from sqlalchemy.orm import Session
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from agents.hospital_rag_agent import HospitalRAGAgent
 from app.database import Conversation, Message, User, get_db
-from app.schemas import (ConversationCreate, MessageCreate, QueryRequest,
-                         UserLogin, UserRegister)
+from app.schemas import (
+    ConversationCreate,
+    MessageCreate,
+    QueryRequest,
+    UserLogin,
+    UserRegister,
+)
 from mlops import monitor_endpoint, setup_metrics, setup_tracing
 from tools import CypherTool
 from tools.health_tool import DSM5RetrievalTool
