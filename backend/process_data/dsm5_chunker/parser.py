@@ -1,10 +1,8 @@
-import os
-import sys
 import re
-import pdfplumber
 from typing import Union
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+import pdfplumber
+
 from utils import AppConfig, save_json
 
 # ===================================

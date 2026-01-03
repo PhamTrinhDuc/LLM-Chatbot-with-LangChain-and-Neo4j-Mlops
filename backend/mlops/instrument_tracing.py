@@ -1,4 +1,3 @@
-import os
 import socket
 from urllib.parse import urlparse
 

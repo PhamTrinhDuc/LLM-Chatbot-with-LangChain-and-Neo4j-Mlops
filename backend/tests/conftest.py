@@ -1,16 +1,11 @@
 """Pytest configuration and shared fixtures."""
 
-import sys
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-
-# Add backend to path
-backend_path = Path(__file__).parent.parent
-sys.path.insert(0, str(backend_path))
 
 from app.database import Base, Conversation, Message, User, get_db
 from main import app
@@ -90,6 +85,16 @@ def client(setup_db):
 def test_user(db: Session):
     """Create a test user."""
     user = User(username="testuser", password_hash=User.hash_password("password123"))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@pytest.fixture
+def test_user_2(db: Session):
+    """Create a second test user."""
+    user = User(username="testuser2", password_hash=User.hash_password("password123"))
     db.add(user)
     db.commit()
     db.refresh(user)

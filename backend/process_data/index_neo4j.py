@@ -11,10 +11,6 @@ import os
 import sys
 
 from dotenv import load_dotenv
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 from langchain_community.vectorstores import Neo4jVector
 from neo4j import GraphDatabase
 

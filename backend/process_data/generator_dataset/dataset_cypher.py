@@ -1,6 +1,4 @@
 import json
-import os
-import sys
 from typing import List, Optional
 
 import pandas as pd
@@ -8,8 +6,6 @@ from groq import Groq
 from neo4j import GraphDatabase
 from pydantic import BaseModel, Field
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from prompt.evaluate import (
     SYSTEM_CYPHER_GENERATION_TEMPLATE,
     USER_CYPHER_GENERATION_TEMPLATE,

@@ -1,18 +1,14 @@
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from dotenv import load_dotenv
-
-load_dotenv()
 import asyncio
 from typing import Any, Dict, List, Literal, Optional
 
+from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 from google import generativeai as genai
 from openai import OpenAI
 
 from utils import AppConfig, logger
+
+load_dotenv()
 
 
 class HealthcareRetriever:

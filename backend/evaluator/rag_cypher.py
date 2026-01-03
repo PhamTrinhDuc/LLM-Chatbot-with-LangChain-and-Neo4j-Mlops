@@ -1,13 +1,8 @@
-import os
-import sys
-
 import pandas as pd
 from loguru import logger
 from neo4j import GraphDatabase
 from tqdm import tqdm
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from chains.hospital_cypher_chain import HospitalCypherChain
 from utils import AppConfig
 

@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
 from datetime import datetime
 from typing import Literal
 
@@ -253,7 +248,7 @@ if __name__ == "__main__":
     )
 
     # Test query
-    query = "Tiểu bang nào có mức tăng phần trăm lớn nhất trong các lần khám Medicaid từ năm 2022 đến năm 2023"
+    query = "Rối loạn phát triển trí tuệ ảnh hưởng đến những chức năng nào?"
 
     response = agent.invoke(query=query)
     print(f"Query: {query}\n")

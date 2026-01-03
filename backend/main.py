@@ -1,5 +1,3 @@
-import os
-import sys
 import json
 import uuid
 
@@ -8,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from agents.hospital_rag_agent import HospitalRAGAgent
 from app.database import Conversation, Message, User, get_db
 from app.schemas import (
@@ -163,12 +160,12 @@ async def stream_chat(request: QueryRequest):
 
 
 @app.post("/dsm5/search")
-async def dsm5_search(request: QueryRequest):
+async def dsm5_search(query):
     """Search DSM-5 diagnostic criteria."""
     try:
-        response = await dsm5_tool._arun(query=request.query)
+        response = await dsm5_tool._arun(query=query)
         return {
-            "query": request.query,
+            "query": query,
             "response": response,
             "results": response.count("Section"),
         }
@@ -178,19 +175,19 @@ async def dsm5_search(request: QueryRequest):
 
 
 @app.post("/dsm5/hybrid")
-async def dsm5_hybrid_search(request: QueryRequest):
+async def dsm5_hybrid_search(query, top_k):
     """Hybrid search (keyword + semantic) for DSM-5."""
     try:
         results = dsm5_tool.retriever.hybrid_search(
-            query=request.query,
-            top_k=request.top_k,
+            query=query,
+            top_k=top_k,
             keyword_weight=0.6,
             vector_weight=1.2,
             include_context=False,
         )
         formatted = dsm5_tool._format_results(results, include_scores=False)
         return {
-            "query": request.query,
+            "query": query,
             "response": formatted,
             "results_count": len(results),
         }

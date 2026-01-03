@@ -1,5 +1,3 @@
-import os
-import sys
 import pandas as pd
 from datasets import Dataset
 from ragas import evaluate
@@ -12,8 +10,6 @@ from ragas.metrics import (
     LLMContextRecall,
 )
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from chains.healthcare_chain import HealthcareRetriever
 from utils import AppConfig, ModelFactory
 

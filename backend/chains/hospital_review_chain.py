@@ -1,11 +1,7 @@
-import os
-import sys
-
 from langchain.chains.retrieval_qa.base import RetrievalQA
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import Neo4jVector
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from prompt.hospital_prompt import SYSTEM_PROMPT, TEXT_NODE_PROPERTIES, USER_PROMPT
 from utils import AppConfig, ModelFactory, logger
 
