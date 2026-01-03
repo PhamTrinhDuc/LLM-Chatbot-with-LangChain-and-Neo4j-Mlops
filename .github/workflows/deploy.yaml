@@ -63,7 +63,8 @@ jobs:
           docker push ${{ env.BACKEND_IMAGE }}:${{ env.LATEST_TAG }}
 
           # Build & Push Frontend
-          cd frontend
+          
+          cd .. && cd frontend
           docker build -f Dockerfile -t ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }} -t ${{ env.FRONTEND_IMAGE }}:${{ env.LATEST_TAG }} .
           docker push ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.FRONTEND_IMAGE }}:${{ env.LATEST_TAG }}
