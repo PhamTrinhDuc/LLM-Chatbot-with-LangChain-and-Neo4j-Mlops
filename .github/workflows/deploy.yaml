@@ -2,7 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "mlops" ] # Chạy khi push lên cả 2 nhánh
+  pull_request:
+    branches: [ "main" ] # Chạy khi ai đó tạo Pull Request vào main
 
 env:
   DOCKER_HUB_REPO: "duc8504"
@@ -16,7 +18,7 @@ jobs:
   # JOB 1: Kiểm tra và Build Image (Chạy trên máy ảo GitHub để tiết kiệm RAM local)
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +34,7 @@ jobs:
           source $HOME/.cargo/env
           cd backend
           uv sync --no-dev
-          uv pip install -r ../tests/requirements.txt
+          uv pip install -r ./tests/requirements.txt
 
       - name: Run Lint
         run: |
