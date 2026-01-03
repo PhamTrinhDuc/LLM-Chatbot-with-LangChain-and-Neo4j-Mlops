@@ -8,4 +8,4 @@ per-file-ignores =
     # File prompt thường có dòng rất dài, ta bỏ qua lỗi line too long:
     ./prompt/*.py: E501, W291
     # File test thường có logic import đặc thù:
-    ./tests/*.py: E402
+    ./backend/tests/*.py: E402

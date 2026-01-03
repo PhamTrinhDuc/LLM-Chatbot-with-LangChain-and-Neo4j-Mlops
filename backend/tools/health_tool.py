@@ -23,15 +23,14 @@ class DSM5RetrievalTool(BaseTool):
     name: str = "DSM5_Retriever"
 
     description: str = """Tool for querying DSM-5 diagnostic criteria and clinical information.
-  Use cases:
-  - Find diagnostic criteria for a disorder (e.g., "Diagnostic criteria for autism spectrum disorder")
-  - Query clinical features and severity levels (e.g., "Diagnostic features of depression")
-  - Search differential diagnosis (e.g., "Differentiate anxiety disorder from panic disorder")
-  - Find related psychiatric disorder information
-  
-  Input: Query about DSM-5 (e.g., "Severe autism spectrum disorder criteria")
-  Output: List of relevant sections with detailed diagnostic information
-  """
+    Use cases:
+    - Find diagnostic criteria for a disorder (e.g., "Diagnostic criteria for autism spectrum disorder")
+    - Query clinical features and severity levels (e.g., "Diagnostic features of depression")
+    - Search differential diagnosis (e.g., "Differentiate anxiety disorder from panic disorder")
+    - Find related psychiatric disorder information
+    Input: Query about DSM-5 (e.g., "Severe autism spectrum disorder criteria")
+    Output: List of relevant sections with detailed diagnostic information
+    """
 
     class Config:
         extra = "allow"  # Allow adding new attributes after init
