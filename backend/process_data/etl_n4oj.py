@@ -4,10 +4,12 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+import os
+
+from dotenv import load_dotenv
 from neo4j import GraphDatabase
 from retry import retry
-import os
-from dotenv import load_dotenv
+
 from utils.helper import logger
 
 load_dotenv(".env.dev")

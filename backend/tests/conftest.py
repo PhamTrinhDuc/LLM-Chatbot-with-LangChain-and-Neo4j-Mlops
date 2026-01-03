@@ -1,19 +1,19 @@
 """Pytest configuration and shared fixtures."""
 
+import sys
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-import sys
-from pathlib import Path
+from sqlalchemy.orm import Session, sessionmaker
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-from app.database import Base, User, Conversation, Message, get_db
+from app.database import Base, Conversation, Message, User, get_db
 from main import app
-
 
 # Test database setup
 TEST_DB_PATH = Path(__file__).parent / "test_chatbot.db"

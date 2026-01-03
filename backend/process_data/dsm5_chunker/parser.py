@@ -2,11 +2,13 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-import re
 import json
-import pdfplumber
+import re
 from typing import Union
-from utils import AppConfig, save_json, load_json
+
+import pdfplumber
+
+from utils import AppConfig, load_json, save_json
 
 # ===================================
 # HELPER FUNCTION

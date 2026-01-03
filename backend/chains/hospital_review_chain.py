@@ -3,11 +3,14 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from typing import Literal
+
 from langchain.chains.retrieval_qa.base import RetrievalQA
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import Neo4jVector
-from utils import ModelFactory, AppConfig, logger
-from prompt.hospital_prompt import SYSTEM_PROMPT, USER_PROMPT, TEXT_NODE_PROPERTIES
+
+from prompt.hospital_prompt import (SYSTEM_PROMPT, TEXT_NODE_PROPERTIES,
+                                    USER_PROMPT)
+from utils import AppConfig, ModelFactory, logger
 
 
 class HospitalReviewChain:

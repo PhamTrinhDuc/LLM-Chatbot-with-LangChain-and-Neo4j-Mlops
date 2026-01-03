@@ -1,15 +1,17 @@
+import json
 import os
 import sys
-import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-import requests
 import time
+from typing import List, Literal, Union
+
+import requests
 import tqdm
-from typing import List, Union, Literal
+from elasticsearch import Elasticsearch, helpers
 from google import generativeai as genai
 from openai import OpenAI
-from elasticsearch import Elasticsearch, helpers
+
 from utils import AppConfig, logger
 
 

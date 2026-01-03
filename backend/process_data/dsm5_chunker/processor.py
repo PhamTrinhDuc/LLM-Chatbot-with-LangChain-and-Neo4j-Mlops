@@ -3,7 +3,8 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 import re
-from utils import load_json, AppConfig, save_json
+
+from utils import AppConfig, load_json, save_json
 
 
 def clean_text(text: str) -> str:

@@ -1,18 +1,12 @@
 """SQLite database setup with SQLAlchemy."""
 
-import os
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    Text,
-    DateTime,
-    ForeignKey,
-)
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
-from datetime import datetime
 import hashlib
+import os
+from datetime import datetime
+
+from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Text,
+                        create_engine)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 # Database path
 DB_PATH = os.path.join(os.path.dirname(__file__), "chatbot.db")

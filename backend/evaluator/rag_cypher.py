@@ -1,14 +1,16 @@
 import os
 import sys
+
 import pandas as pd
 from loguru import logger
 from neo4j import GraphDatabase
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from utils import AppConfig
-from chains.hospital_cypher_chain import HospitalCypherChain
 from tqdm import tqdm
+
+from chains.hospital_cypher_chain import HospitalCypherChain
+from utils import AppConfig
 
 CYPHER_DATASET_EVAL_PATH = AppConfig.CYPHER_DATASET_EVAL_PATH
 CYPHER_RESULT_EVAL_PATH = AppConfig.CYPHER_RESULT_EVAL_PATH

@@ -2,27 +2,23 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from agents.hospital_rag_agent import HospitalRAGAgent
-from tools.health_tool import DSM5RetrievalTool
-from tools import CypherTool
-from utils import AppConfig, logger
-from utils.logging import trace_id_ctx
-from fastapi import FastAPI, HTTPException, Depends, Request
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 import json
 import uuid
 
-from app.database import get_db, User, Conversation, Message, init_db
-from app.schemas import (
-    UserRegister,
-    QueryRequest,
-    UserLogin,
-    ConversationCreate,
-    MessageCreate,
-)
-from mlops import setup_metrics, setup_tracing, monitor_endpoint
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
+
+from agents.hospital_rag_agent import HospitalRAGAgent
+from app.database import Conversation, Message, User, get_db, init_db
+from app.schemas import (ConversationCreate, MessageCreate, QueryRequest,
+                         UserLogin, UserRegister)
+from mlops import monitor_endpoint, setup_metrics, setup_tracing
+from tools import CypherTool
+from tools.health_tool import DSM5RetrievalTool
+from utils import AppConfig, logger
+from utils.logging import trace_id_ctx
 
 
 def _setup_middlewares(app: FastAPI) -> None:

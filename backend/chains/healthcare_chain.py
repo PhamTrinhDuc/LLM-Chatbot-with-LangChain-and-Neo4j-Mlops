@@ -5,11 +5,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from dotenv import load_dotenv
 
 load_dotenv()
-from openai import OpenAI
-from google import generativeai as genai
-from elasticsearch import Elasticsearch
-from typing import List, Dict, Any, Literal, Optional
 import asyncio
+from typing import Any, Dict, List, Literal, Optional
+
+from elasticsearch import Elasticsearch
+from google import generativeai as genai
+from openai import OpenAI
+
 from utils import AppConfig, logger
 
 

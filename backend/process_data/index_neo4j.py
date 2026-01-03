@@ -6,16 +6,18 @@ Script để quản lý embeddings cho Neo4j vector index.
 - Recompute: Xóa rồi tính lại embeddings
 """
 
+import argparse
 import os
 import sys
-import argparse
+
 from dotenv import load_dotenv
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from neo4j import GraphDatabase
 from langchain_community.vectorstores import Neo4jVector
+from neo4j import GraphDatabase
+
 from utils.helper import ModelFactory
 
 

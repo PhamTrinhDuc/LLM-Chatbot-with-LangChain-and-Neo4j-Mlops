@@ -2,10 +2,11 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-import pdfplumber
 import re
-from dataclasses import dataclass, asdict
-from typing import List, Optional, Dict, Any
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional
+
+import pdfplumber
 
 # ============================================================
 # CONFIGURATION

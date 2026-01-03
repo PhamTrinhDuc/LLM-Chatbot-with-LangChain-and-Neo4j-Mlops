@@ -1,8 +1,9 @@
 """Tests for DSM-5 tool endpoints."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 
 @pytest.mark.dsm5

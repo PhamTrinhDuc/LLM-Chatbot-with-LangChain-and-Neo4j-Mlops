@@ -2,16 +2,19 @@ import os
 import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from typing import Literal
 import logging
 import warnings
 from contextlib import contextmanager
 from io import StringIO
+from typing import Literal
+
 from langchain.prompts import PromptTemplate
-from langchain_community.graphs import Neo4jGraph
 from langchain_community.chains.graph_qa.cypher import GraphCypherQAChain
-from prompt.hospital_prompt import QA_GENERATION_TEMPLATE, CYPHER_GENERATION_TEMPLATE
-from utils import ModelFactory, AppConfig, logger
+from langchain_community.graphs import Neo4jGraph
+
+from prompt.hospital_prompt import (CYPHER_GENERATION_TEMPLATE,
+                                    QA_GENERATION_TEMPLATE)
+from utils import AppConfig, ModelFactory, logger
 
 
 class HospitalCypherChain:

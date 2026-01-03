@@ -1,6 +1,7 @@
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Tìm đường dẫn tuyệt đối đến .env.dev (nằm ở backend/)
