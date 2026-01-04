@@ -18,6 +18,5 @@ resources:
     cpu: 100m
     memory: 256Mi
 
-secretName: chatbot-frontend-secret
-config: 
+env: 
   BACKEND_URL: http://chatbot-backend:8000

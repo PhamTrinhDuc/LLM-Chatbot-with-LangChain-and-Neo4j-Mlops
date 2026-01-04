@@ -14,6 +14,12 @@ spec:
   template:
     metadata:
       labels: {{ include "chatbot-backend.selectorLabels" . | nindent 8}}
+
+      annotations:
+        # Dòng này sẽ thay đổi khi giá trị trong config thay đổi, buộc K8s phải restart Pod
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        
     spec:
       containers:
         - name: {{ .Chart.Name }}

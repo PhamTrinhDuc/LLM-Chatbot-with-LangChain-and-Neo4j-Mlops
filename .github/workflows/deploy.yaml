@@ -1,8 +1,9 @@
 name: CI/CD Pipeline
 
+# 1. TRIGGER: Khi nào chạy?
 on:
   push:
-    branches: [ "main", "mlops" ] # Chạy khi push lên cả 2 nhánh
+    branches: [ "main", "mlops"] # Chạy khi push lên nhánh main
   pull_request:
     branches: [ "main" ] # Chạy khi ai đó tạo Pull Request vào main
 
@@ -55,6 +56,11 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Images
+        # Điều kiện 'if':
+        # 1. github.event_name == 'push': Đảm bảo code đã chính thức được đẩy lên (hoặc merge).
+        # 2. github.ref == 'refs/heads/main': Chỉ thực hiện trên nhánh main bản chính thức.
+        # -> Giúp tiết kiệm tài nguyên Docker Hub và tránh deploy nhầm code đang sửa dở.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           # Build & Push Backend
           cd backend
@@ -63,11 +69,15 @@ jobs:
           docker push ${{ env.BACKEND_IMAGE }}:${{ env.LATEST_TAG }}
 
           # Build & Push Frontend
-          
           cd .. && cd frontend
           docker build -f Dockerfile -t ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }} -t ${{ env.FRONTEND_IMAGE }}:${{ env.LATEST_TAG }} .
           docker push ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
           docker push ${{ env.FRONTEND_IMAGE }}:${{ env.LATEST_TAG }}
+
+          # Dùng SHA (mã hash commit) làm tag giúp:
+          # - Truy vết chính xác code nào nằm trong image nào.
+          # - Hỗ trợ Rollback cực nhanh (chỉ cần đổi tag về mã SHA cũ).
+          # Tag 'latest' dùng để kéo bản mới nhất nhanh chóng mà không cần nhớ mã SHA.
 
       - name: Upload Test Results
         if: always()
@@ -77,23 +87,37 @@ jobs:
           path: backend/test-results.xml
 
   # JOB 2: Deploy (Chạy trên Self-hosted Runner trong máy bạn để kết nối Minikube)
-  # deploy:
-  #   needs: build-and-push
-  #   runs-on: self-hosted
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  deploy:
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # runs-on: self-hosted -> Lệnh này sẽ được gửi xuống Runner (máy Duc8504) ở WSL2.
+    # Mật khẩu (Secret) lấy từ GitHub Settings -> Secrets:
+    # - Tuyệt đối không viết thẳng pass vào đây. 
+    # - GitHub sẽ tự che dấu (mask) thành *** trong logs.
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Deploy to Minikube
-  #       run: |
-  #         echo "===== Deploying to Minikube ====="
-  #         # Ví dụ sử dụng Helm để deploy
-  #         helm upgrade --install chatbot-backend ./mlops/k8s/charts/backend \
-  #           --set image.tag=${{ env.IMAGE_TAG }} \
-  #           --namespace default
+      - name: Deploy to Minikube Local
+        run: |
+          echo "===== Deploying to Minikube ====="
+          cd ./mlops/k8s/charts
+
+          helm upgrade --install chatbot-backend ./backend \
+            --set image.tag=${{ env.IMAGE_TAG }} \
+            --set secrets.OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            --set secrets.GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }} \
+            --set secrets.REDIS_URL=${{ secrets.REDIS_URL }} \
+            --set secrets.NEO4J_PASSWORD=${{ secrets.NEO4J_PASSWORD }} \
+            --set env.ENV_LOG=${{ vars.ENV_LOG }} \
+            --set env.NEO4J_URI=${{ vars.NEO4J_URI }} \
+            --set env.NEO4J_USER=${{ vars.NEO4J_USER }} \
+            --namespace default
           
-  #         helm upgrade --install chatbot-frontend ./mlops/k8s/charts/frontend \
-  #           --set image.tag=${{ env.IMAGE_TAG }} \
-  #           --namespace default
+          helm upgrade --install chatbot-frontend ./frontend \
+            --set image.tag=${{ env.IMAGE_TAG }} \
+            --set env.BACKEND_URL=${{ vars.BACKEND_URL }} \
+            --namespace default
           
-  #         echo "Deployment completed successfully!"
+          echo "Deployment completed successfully!"

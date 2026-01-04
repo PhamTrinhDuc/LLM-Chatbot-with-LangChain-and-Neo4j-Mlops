@@ -162,9 +162,7 @@ async def stream_chat(request: QueryRequest):
 
 
 @app.post("/dsm5/search")
-async def dsm5_search(
-    query: str = Query(..., description="Search query")
-):
+async def dsm5_search(query: str = Query(..., description="Search query")):
     """Search DSM-5 diagnostic criteria."""
     try:
         response = await dsm5_tool._arun(query=query)
@@ -202,8 +200,10 @@ async def dsm5_hybrid_search(
 
 
 @app.post("/dsm5/criteria")
-async def dsm5_criteria_search(disorder: str = Query(..., description="Disorder name"),
-                               criteria: str = Query(None, description="Criterion text")):
+async def dsm5_criteria_search(
+    disorder: str = Query(..., description="Disorder name"),
+    criteria: str = Query(None, description="Criterion text"),
+):
     """Search DSM-5 by disorder name and criterion."""
     try:
         results = dsm5_tool.retriever.search_by_criteria(

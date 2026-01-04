@@ -5,7 +5,7 @@ metadata:
   labels: 
     {{ include "chatbot-frontend.labels" . | nindent 4 }}
 data:
-  {{ range $key, $val := .Values.config }}
+  {{ range $key, $val := .Values.env }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
   
