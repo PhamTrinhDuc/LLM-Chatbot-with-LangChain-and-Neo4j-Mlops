@@ -1,3 +1,5 @@
+> *Note: This is a file to practice manual commands. Later, it can be replaced with using Terraform for management.*
+
 
 ## I. Command usage
 ### 1. Deploy chart using Helm: 

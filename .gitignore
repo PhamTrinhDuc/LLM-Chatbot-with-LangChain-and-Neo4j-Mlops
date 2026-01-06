@@ -19,6 +19,9 @@ __pycache__/
 notebook
 .vscode
 chatbot.db
+*.html 
+
+
 # Distribution / packaging
 .Python
 build/
