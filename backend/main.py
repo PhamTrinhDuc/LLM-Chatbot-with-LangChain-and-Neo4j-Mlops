@@ -1,6 +1,6 @@
 import json
 import uuid
-
+import asyncio
 from fastapi import Depends, FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -106,6 +106,17 @@ async def get_status():
 # ============================================================
 
 
+@app.post("/chat/mock-test")
+async def chat_mock(request: QueryRequest):
+    await asyncio.sleep(1)  # giả lập latency xử lý
+
+    return {
+        "query": request.query,
+        "answer": "This is a mocked response",
+        "steps": 3,
+    }
+
+
 @app.post("/chat")
 @monitor_endpoint("chat")
 async def chat(request: QueryRequest):
@@ -165,6 +176,7 @@ async def stream_chat(request: QueryRequest):
 async def dsm5_search(query: str = Query(..., description="Search query")):
     """Search DSM-5 diagnostic criteria."""
     try:
+        logger.info(f"DSM5 search for query: {query}")
         response = await dsm5_tool._arun(query=query)
         return {
             "query": query,
@@ -182,6 +194,7 @@ async def dsm5_hybrid_search(
 ):
     """Hybrid search (keyword + semantic) for DSM-5."""
     try:
+        logger.info(f"DSM5 hybrid search for query: {query}")
         results = dsm5_tool.retriever.hybrid_search(
             query=query,
             keyword_weight=0.6,
@@ -206,6 +219,9 @@ async def dsm5_criteria_search(
 ):
     """Search DSM-5 by disorder name and criterion."""
     try:
+        logger.info(
+            f"DSM5 criteria search for disorder: {disorder}, criteria: {criteria}"
+        )
         results = dsm5_tool.retriever.search_by_criteria(
             disorder_name=disorder, criteria=criteria
         )
@@ -230,6 +246,7 @@ async def dsm5_criteria_search(
 async def cypher_query(request: QueryRequest):
     """Query hospital data using Neo4j Cypher."""
     try:
+        logger.info(f"Cypher query for: {request.query}")
         answer, generated_cypher = cypher_tool.cypher_chain.invoke(query=request.query)
         return {"query": request.query, "answer": answer, "cypher": generated_cypher}
     except Exception as e:
@@ -241,6 +258,7 @@ async def cypher_query(request: QueryRequest):
 async def cypher_patients(request: QueryRequest):
     """Search for patients."""
     try:
+        logger.info(f"Patient search for: {request.query}")
         answer, generated_cypher = cypher_tool.cypher_chain.invoke(
             query=f"Patient search: {request.query}"
         )
@@ -254,6 +272,7 @@ async def cypher_patients(request: QueryRequest):
 async def cypher_hospital_stats(request: QueryRequest):
     """Get hospital statistics."""
     try:
+        logger.info(f"Hospital statistics for: {request.query}")
         answer, generated_cypher = cypher_tool.cypher_chain.invoke(
             query=f"Hospital statistics: {request.query}"
         )
@@ -272,8 +291,10 @@ async def cypher_hospital_stats(request: QueryRequest):
 async def register(user: UserRegister, db: Session = Depends(get_db)):
     """Register a new user."""
     # Check if user exists
+    logger.info(f"Registering new user: {user.username}")
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
+        logger.error(f"Username {user.username} already exists")
         raise HTTPException(status_code=400, detail="Username already exists")
 
     # Create new user
@@ -294,9 +315,11 @@ async def register(user: UserRegister, db: Session = Depends(get_db)):
 @app.post("/auth/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
     """Login user."""
+    logger.info(f"User {user.username} attempting to log in")
     db_user = db.query(User).filter(User.username == user.username).first()
 
     if not db_user or not db_user.verify_password(user.password):
+        logger.error(f"Error during user: {user.username} login")
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     return {
@@ -309,6 +332,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
 @app.get("/auth/users")
 async def get_users(db: Session = Depends(get_db)):
     """Get all users (for debugging)."""
+    logger.info("Fetching all users")
     users = db.query(User).all()
     return [{"id": u.id, "username": u.username} for u in users]
 
@@ -321,8 +345,10 @@ async def get_users(db: Session = Depends(get_db)):
 @app.get("/conversations/{username}")
 async def get_conversations(username: str, db: Session = Depends(get_db)):
     """Get all conversations for a user."""
+    logger.info(f"Fetching conversations for user {username}")
     user = db.query(User).filter(User.username == username).first()
     if not user:
+        logger.error(f"User {username} not found when fetching conversations")
         raise HTTPException(status_code=404, detail="User not found")
 
     conversations = (
@@ -353,8 +379,10 @@ async def create_conversation(
     username: str, conv: ConversationCreate, db: Session = Depends(get_db)
 ):
     """Create a new conversation."""
+    logger.info(f"Creating conversation for user {username} with title {conv.title}")
     user = db.query(User).filter(User.username == username).first()
     if not user:
+        logger.error(f"User {username} not found when creating conversation")
         raise HTTPException(status_code=404, detail="User not found")
 
     new_conv = Conversation(user_id=user.id, title=conv.title)
@@ -372,8 +400,10 @@ async def create_conversation(
 @app.delete("/conversations/{conversation_id}")
 async def delete_conversation(conversation_id: int, db: Session = Depends(get_db)):
     """Delete a conversation."""
+    logger.info(f"Deleting conversation ID {conversation_id}")
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
+        logger.error(f"Conversation ID {conversation_id} not found for deletion")
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     db.delete(conv)
@@ -387,8 +417,10 @@ async def update_conversation_title(
     conversation_id: int, title: str, db: Session = Depends(get_db)
 ):
     """Update conversation title."""
+    logger.info(f"Updating title for conversation ID {conversation_id} to {title}")
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
+        logger.error(f"Conversation ID {conversation_id} not found for title update")
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     conv.title = title
@@ -405,12 +437,15 @@ async def update_conversation_title(
 @app.get("/messages/{conversation_id}")
 async def get_messages(conversation_id: int, db: Session = Depends(get_db)):
     """Get all messages in a conversation."""
+    logger.info(f"Fetching messages for conversation ID {conversation_id}")
     messages = (
         db.query(Message)
         .filter(Message.conversation_id == conversation_id)
         .order_by(Message.created_at)
         .all()
     )
+    if not messages:
+        logger.error(f"No messages found for conversation ID {conversation_id}")
 
     return [
         {
@@ -428,8 +463,10 @@ async def add_message(
     conversation_id: int, message: MessageCreate, db: Session = Depends(get_db)
 ):
     """Add a message to a conversation."""
+    logger.info(f"Adding message to conversation ID {conversation_id}")
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
+        logger.error(f"Conversation ID {conversation_id} not found when adding message")
         raise HTTPException(status_code=404, detail="Conversation not found")
 
     new_msg = Message(
@@ -450,6 +487,7 @@ async def add_message(
 @app.delete("/messages/{conversation_id}")
 async def clear_messages(conversation_id: int, db: Session = Depends(get_db)):
     """Clear all messages in a conversation."""
+    logger.info(f"Clearing messages for conversation ID {conversation_id}")
     db.query(Message).filter(Message.conversation_id == conversation_id).delete()
     db.commit()
 
