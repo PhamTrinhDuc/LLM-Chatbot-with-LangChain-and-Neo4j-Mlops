@@ -149,6 +149,10 @@ kubectl port-forward -n monitoring <pod_name> 16686:16686
 # 4. Pass var JAEGER_ENDPOINT on github secrets
 # http://<service-name>.<namespace>.svc.cluster.local
 http://jaeger.monitoring.svc.cluster.local:4317
+
+# 5. Gỡ stacks jaeger 
+helm uninstall jaeger -n monitoring
+kubectl delete ns monitoring
 ```
 
 ## III. Setup Nginx Ingress

@@ -1,4 +1,4 @@
-replicaCount: 1
+replicaCount: 2
 
 image: 
   repository: duc8504/ai-agent-backend
@@ -31,7 +31,7 @@ livenessProbe:
   httpGet:
     path: /health
     port: http
-  initialDelaySeconds: 30
+  initialDelaySeconds: 120 # for latency backend
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 3
@@ -40,7 +40,7 @@ readinessProbe:
   httpGet:
     path: /health
     port: http
-  initialDelaySeconds: 10
+  initialDelaySeconds: 30
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 2
