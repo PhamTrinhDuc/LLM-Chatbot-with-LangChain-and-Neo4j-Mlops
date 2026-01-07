@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata: 
-  name: {ingress_name}
+  name: ${ingress_name}
   annotations: 
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
@@ -12,24 +12,24 @@ metadata:
 spec: 
   ingressClassName: nginx
   rules: 
-    - host: {frontend_host} # subdomain
+    - host: ${frontend_host} # subdomain
       http: 
         paths: 
           - path: /
             pathType: Prefix
             backend: 
               service: 
-                name: {frontend_svc} # must match service name of frontend
+                name: ${frontend_svc} # must match service name of frontend
                 port: 
-                  number: {frontend_port}
+                  number: ${frontend_port}
 
-    - host: {backend_host} # subdomain
+    - host: ${backend_host} # subdomain
       http:
         paths:
           - path: /  
             pathType: Prefix
             backend:
               service:
-                name: {backend_svc} # must match service name of backend
+                name: ${backend_svc} # must match service name of backend
                 port:
-                  number: {backend_port}
+                  number: ${backend_port}

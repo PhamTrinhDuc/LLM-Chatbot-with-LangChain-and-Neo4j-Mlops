@@ -20,6 +20,7 @@ notebook
 .vscode
 chatbot.db
 *.html 
+.terraform
 
 
 # Distribution / packaging
