@@ -1,0 +1,61 @@
+# Cấu hình Prometheus chính
+prometheus: 
+  prometheusSpec: 
+    retention: 1d
+    # Bỏ qua xác thực chứng chỉ Kubelet (Sửa lỗi TLS/x509 trên Minikube)
+    insecureSkipVerify: true
+    # Quét tất cả ServiceMonitor ở mọi namespace (Để thấy app chatbot của bạn)
+    serviceMonitorSelectorNilUsesHelmValues: false
+    
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+    
+    resources: 
+      requests: 
+        memory: "400Mi"
+      limits: 
+        memory: "1Gi" # Nâng lên 1GB để tránh crash (OOMKilled) khi quét metrics
+
+# Cấu hình Grafana
+grafana: 
+  adminPassword: admin
+  persistence:
+    enabled: true
+    size: 1Gi
+  resources:
+    requests:
+      memory: "100Mi"
+    limits: 
+      memory: "300Mi"
+
+# Sửa lỗi "Connection Refused" bằng cách tắt các bộ thu thập Control Plane 
+# (Vì trên Minikube các bộ này chỉ lắng nghe nội bộ 127.0.0.1)
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+# Cấu hình Kubelet để lấy dữ liệu CPU/RAM của Pod
+kubelet:
+  enabled: true
+  serviceMonitor:
+    # Ép dùng HTTP để tránh lỗi chứng chỉ HTTPS trên cổng 10250 của Minikube
+    https: false 
+
+# Các bộ thu thập dữ liệu hệ thống cơ bản
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+# Tắt Alertmanager để tiết kiệm RAM cho máy
+alertmanager:
+  enabled: false
