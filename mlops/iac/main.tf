@@ -40,20 +40,18 @@ module "logging" {
   environment     = var.environment
 }
 
-# Uncomment when monitoring module is ready
-# module "monitoring" {
-#   source = "./modules/monitoring"
-#   
-#   kubeconfig_path = var.kubeconfig_path
-#   namespace       = var.monitoring_namespace
-#   environment     = var.environment
-# }
+module "monitoring" {
+  source = "./modules/monitoring"
+  
+  kubeconfig_path = var.kubeconfig_path
+  namespace       = var.monitoring_namespace
+  environment     = var.environment
+}
 
-# Uncomment when jaeger module is ready
-# module "jaeger" {
-#   source = "./modules/jaeger"
-#   
-#   kubeconfig_path = var.kubeconfig_path
-#   namespace       = var.jaeger_namespace
-#   environment     = var.environment
-# }
+module "jaeger" {
+  source = "./modules/jaeger"
+  
+  kubeconfig_path = var.kubeconfig_path
+  namespace       = var.jaeger_namespace
+  environment     = var.environment
+}

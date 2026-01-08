@@ -20,19 +20,6 @@ variable "ingress_nginx_namespace" {
   default     = "ingress-nginx"
 }
 
-variable "ingress_config" {
-  description = "Ingress configuration"
-  type = object({
-    ingress_name   = optional(string, "plg-ingress")
-    frontend_host  = string
-    backend_host   = string
-    frontend_port  = number
-    backend_port   = number
-    frontend_svc   = string
-    backend_svc    = string
-  })
-}
-
 # Logging (PLG Stack) specific variables
 variable "logging_namespace" {
   description = "Kubernetes namespace for Logging Stack (Loki, Prometheus, Grafana)"
@@ -52,4 +39,25 @@ variable "jaeger_namespace" {
   description = "Kubernetes namespace for Jaeger"
   type        = string
   default     = "jaeger"
+}
+
+
+variable "ingress_config" {
+  description = "Ingress configuration"
+  type = object({
+    app_namespace  = string
+    jaeger_namespace = string
+    
+    frontend_host  = string
+    backend_host   = string
+    jaeger_host    = string
+    
+    frontend_port  = number
+    backend_port   = number
+    jaeger_port    = number
+    
+    frontend_svc   = string
+    backend_svc    = string
+    jaeger_svc     = string
+  })
 }
