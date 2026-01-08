@@ -96,6 +96,7 @@ helm install monitor prometheus-community/kube-prometheus-stack \
   --create-namespace
 
 # 3. Access to Grafana
+# kubectl port-forward -n default pod/$POD 8000:8000 &
 kubectl port-forward deployment/monitor-grafana 3000:3000 -n monitoring
 # ID: 
 # 15661 (Kubernetes / Compute Resources / Pod)

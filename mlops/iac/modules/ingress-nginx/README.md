@@ -1,3 +1,20 @@
+## 1. Cách hoạt động khi truy cập vào Pod\
+Khi chạy lệnh bên dưới: 
+```bash
+curl -I -H "Host: api.chatbot-medical.local" http://$(minikube ip)/health
+```
+### 1. Gói tin xuất phát
+Từ máy local (curl) gửi tới IP Minikube cổng 80.
+### 2. Gặp Nginx (HostNetwork)
+Vì set hostNetwork: true, Nginx Pod đang "nghe" trực tiếp ở cổng 80 đó. Nó đón gói tin vào.
+### 3. Nginx soi Header
+Nó thấy Host: api.chatbot-medical.local. Nó tra bảng cấu hình (từ Ingress Resource bạn đã apply) và thấy: "À, host này thì phải gửi tới Service chatbot-backend ở port 8000".
+### 4. Nginx gửi tới Service
+Nginx sử dụng DNS nội bộ của K8s để tìm IP của Service chatbot-backend.
+### 5. Service tới Pod
+Gói tin đi qua ClusterIP của Service, sau đó được đẩy vào một trong các Pod Endpoints mà bạn đã thấy lúc nãy.
+
+## 2. Một số vấn đề khi dùng Terraform deploy Ingress-Nginx
 ### 1. Vấn đề Namespace Scope (Quan trọng nhất)
 
 * **Vấn đề:** Ingress Resource và Service mà nó trỏ tới **bắt buộc** phải nằm cùng một Namespace.
