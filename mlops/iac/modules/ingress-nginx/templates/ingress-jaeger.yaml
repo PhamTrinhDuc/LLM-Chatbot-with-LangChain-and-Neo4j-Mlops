@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: ${jaeger_namespace}-ingress
+  namespace: ${jaeger_namespace} # <--- Phải trùng với Jaeger
+spec: 
+  ingressClassName: nginx
+  rules: 
+    - host: ${jaeger_host}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${jaeger_svc}
+                port:
+                  number: 16686

@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: ${app_namespace}-ingress
+  namespace: ${app_namespace} # <--- Phải trùng với App
+  annotations:
+    annotations: 
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # Đây là phần quan trọng nhất cho Streamlit/Websocket:
+    nginx.ingress.kubernetes.io/websocket-services: "${frontend_svc}"
+spec: 
+  ingressClassName: nginx
+  rules: 
+    - host: ${frontend_host}
+      http: 
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: 
+              service: 
+                name: ${frontend_svc}
+                port: 
+                  number: ${frontend_port} 
+
+    - host: ${backend_host}
+      http:
+        paths:
+          - path: /  
+            pathType: Prefix
+            backend:
+              service:
+                name: ${backend_svc}
+                port: 
+                  number: ${backend_port}

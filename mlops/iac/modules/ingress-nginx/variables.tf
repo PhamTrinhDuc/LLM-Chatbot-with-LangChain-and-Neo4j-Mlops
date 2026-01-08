@@ -23,12 +23,19 @@ variable "environment" {
 variable "ingress_config" {
   description = "Ingress configuration"
   type = object({
-    ingress_name   = optional(string, "plg-ingress")
+    app_namespace  = string
+    jaeger_namespace = string
+
     frontend_host  = string
     backend_host   = string
+    jaeger_host    = string
+
     frontend_port  = number
     backend_port   = number
+    jaeger_port    = number
+
     frontend_svc   = string
     backend_svc    = string
+    jaeger_svc     = string
   })
 }
