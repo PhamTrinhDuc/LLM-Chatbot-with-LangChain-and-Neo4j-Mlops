@@ -1,8 +1,8 @@
 # Infrastructure as Code (IaC) - Terraform
 
-Cấu trúc Terraform refactored sử dụng **Root Module + Child Modules pattern** để tối ưu hóa code reusability và maintainability.
+Refactored Terraform structure using **Root Module + Child Modules pattern** to optimize deployment reusability and maintainability.
 
-## Cấu trúc thư mục
+## Directory Structure
 
 ```
 iac/
@@ -31,7 +31,7 @@ iac/
 └── README.md
 ```
 
-## Cách sử dụng
+## Usage
 
 ### 1. Initialize Terraform
 ```bash
@@ -42,47 +42,36 @@ terraform init
 ### 2. Plan deployment
 ```bash
 terraform plan -out=tfplan
+# for specific module 
+terraform plan -target=module.<name_module> 
 ```
 
-### 3. Apply deployment
+### 3. Validate command 
+```bash
+tarraform validate 
+# for specific module 
+cd modules/<name_module> 
+tarraform validate
+```
+
+### 4. Apply deployment
 ```bash
 terraform apply tfplan
-```
-### 4. For specific module 
-```bash
-terraform plan -target=module.<name_module>
+# for specific module 
 terraform apply -target=module.<name_module>
 ```
 
-### 5. Enable/Disable Modules
-Để enable module chưa implement (monitoring, jaeger), uncomment tương ứng trong `main.tf`:
-
-```tf
-# Uncomment when monitoring module is ready
-module "monitoring" {
-  source = "./modules/monitoring"
-  
-  kubeconfig_path = var.kubeconfig_path
-  namespace       = var.monitoring_namespace
-  environment     = var.environment
-}
-```
-
-### 6. Destroy all Infa
+### 5. Destroy all Infrastructure
 ```bash
 terraform destroy
-```
-
-### 7. Deploy specific module
-```bash
-terraform apply -target=module.ingress_nginx
-terraform apply -target=module.logging
+# for specific module 
 terraform destroy -target=module.logging
+
 ```
 
 ## Variables (terraform.tfvars)
 
-Tất cả configuration được centralize ở `terraform.tfvars`:
+All configuration is centralized in `terraform.tfvars`:
 
 ```hcl
 environment = "dev"  # dev, staging, prod
@@ -105,9 +94,8 @@ ingress_config = {
 }
 ```
 ## Troubleshooting
-
 ### Provider version conflicts
-Nếu gặp provider version issue, sửa `terraform` block ở `main.tf`:
+If you encounter provider version issues, modify the `terraform` block in `main.tf`:
 ```tf
 terraform {
   required_providers {
@@ -119,12 +107,18 @@ terraform {
 ```
 
 ### Module not found
-Đảm bảo bạn ở trong `/iac` directory trước khi chạy terraform commands.
+Make sure you are in the `/iac` directory before running terraform commands.
+
+
+### Confusion between modules and module
+When running commands like `terraform apply -target=module.jearger`
+- `module` here is the keyword in the `main.tf` file in the root folder
+- Not the `modules` folder
 
 ## Next Steps
 
 1. Implement monitoring stack configuration
 2. Implement Jaeger tracing configuration
 3. Add terraform remote state (S3, Terraform Cloud)
-4. Setup CI/CD pipeline với Terraform
-5. Add policy-as-code (Sentinel hoặc OPA)
+4. Setup CI/CD pipeline with Terraform
+5. Add policy-as-code (Sentinel or OPA)
