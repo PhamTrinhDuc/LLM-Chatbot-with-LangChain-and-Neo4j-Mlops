@@ -1,7 +1,7 @@
 import asyncio
 import json
 from typing import Literal
-
+from langchain.callbacks.base import BaseCallbackHandler
 from utils.config import AppConfig
 from utils.logging import logger
 
@@ -41,7 +41,6 @@ def async_retry(max_retries: int = 3, delay: int = 1):
 class ModelFactory:
     @staticmethod
     def get_llm_model(llm_model: Literal["google", "openai", "groq"] = "google"):
-
         try:
             if llm_model == "google":
                 from langchain_google_genai import ChatGoogleGenerativeAI

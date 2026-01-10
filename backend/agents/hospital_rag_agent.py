@@ -46,6 +46,7 @@ class HospitalRAGAgent:
         self._tools = None
         self._prompt = None
         self._memory = None
+        self._callback = None
 
     @property
     def memory(self):
@@ -85,7 +86,10 @@ class HospitalRAGAgent:
     def llm(self):
         """Lazy initialization of LLM model."""
         if self._llm is None:
-            self._llm = ModelFactory.get_llm_model(llm_model=self.llm_model)
+            self._llm = ModelFactory.get_llm_model(
+                llm_model=self.llm_model,
+                callbacks=[self.callbacks],  # Pass callbacks to LLM
+            )
         return self._llm
 
     @property
@@ -239,6 +243,56 @@ class HospitalRAGAgent:
         except Exception as e:
             logger.error(f"Error in astream: {e}")
             raise e
+
+    def get_tools_call(self, query: str) -> dict:
+        """
+        Get tool calls that agent would make WITHOUT executing them.
+        """
+
+        raw_agent = create_openai_functions_agent(
+            llm=self.llm,
+            prompt=self.prompt,
+            tools=self.tools,
+        )
+
+        # Raw agent requires intermediate_steps key
+        agent_state = {"input": query, "intermediate_steps": []}
+
+        # Get initial message from agent (this triggers tool selection)
+        output = raw_agent.invoke(agent_state)
+
+        tool_calls = []
+
+        # Check if output has tool (AgentAction)
+        if hasattr(output, "tool"):
+            tool_calls.append(
+                {
+                    "tool": output.tool,
+                }
+            )
+        # If output is a message with tool_calls
+        elif hasattr(output, "tool_calls"):
+            for tool_call in output.tool_calls:
+                tool_calls.append(
+                    {
+                        "tool": tool_call.get("name") or tool_call.get("tool"),
+                    }
+                )
+
+        # If output is a tuple/list (action, observation)
+        elif isinstance(output, (tuple, list)) and len(output) > 0:
+            if hasattr(output[0], "tool"):
+                tool_calls.append(
+                    {
+                        "tool": output[0].tool,
+                    }
+                )
+
+        return {
+            "query": query,
+            "tool_calls": [tool["tool"] for tool in tool_calls],
+            "reasoning": str(output) if output else "No tool selection made",
+        }
 
 
 if __name__ == "__main__":

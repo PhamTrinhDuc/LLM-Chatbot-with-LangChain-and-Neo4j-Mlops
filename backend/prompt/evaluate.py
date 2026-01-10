@@ -85,7 +85,7 @@ zero.
 
 USER_CYPHER_GENERATION_TEMPLATE = """
 ##### TASK #####
-Generate {num_pairs} diverse question-Cypher query pairs for the topic: "{topic}". You can focus on some of these nodes: {focus_nodes}
+Generate {num_pairs} diverse question-Cypher query pairs for the topic: "{topic}". You can focus refer to some of these nodes: {focus_nodes}
 
 ##### REQUIREMENTS #####
 - Follow all schema constraints and relationship directions
@@ -95,7 +95,11 @@ Generate {num_pairs} diverse question-Cypher query pairs for the topic: "{topic}
 - Cover different use cases: time-based analysis, numerical comparisons, categorical filtering
 - Ensure queries are read-only (no CREATE, DELETE, SET operations)
 - Generate question using Vietnamese language
+
+##### RESPONSE FORMAT #####
 - Ensure compliance with the response format. 
+Response Format:
+{format_schema}
 """
 
 
@@ -113,5 +117,7 @@ Requirements:
 ####### PASSAGE #######
 {passage}
 
-Ensure compliance with the response format. 
+Ensure compliance with the response format below: 
+Response Format:
+{format_schema}
 """

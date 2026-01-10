@@ -20,7 +20,7 @@ class DSM5RetrievalTool(BaseTool):
     - Differential diagnosis information
     """
 
-    name: str = "DSM5_Retriever"
+    name: str = "DSM5"
 
     description: str = """Tool for querying DSM-5 diagnostic criteria and clinical information.
     Use cases:
