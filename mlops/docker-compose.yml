@@ -327,7 +327,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - 3001:3000 # Map port 3000 of the container to port 3001 on the host
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/langfuse

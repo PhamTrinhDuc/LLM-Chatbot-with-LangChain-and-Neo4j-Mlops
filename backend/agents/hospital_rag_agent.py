@@ -16,6 +16,7 @@ from tools import (
     get_current_wait_times,
     get_most_available_hospital,
 )
+from langfuse.callback import CallbackHandler 
 from utils import AppConfig, ModelFactory, logger
 
 
@@ -39,7 +40,10 @@ class HospitalRAGAgent:
         self.llm_model = llm_model
         self.embedding_model = embedding_model
         self.user_id = user_id
-        self.session_id = session_id
+        self.session_id = (
+            session_id or \
+            f"{self.user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
         self.type_memory = type_memory
         self._agent_executor = None
         self._llm = None
@@ -47,19 +51,29 @@ class HospitalRAGAgent:
         self._prompt = None
         self._memory = None
         self._callback = None
-
+    
+    @property 
+    def callbacks(self):
+        if self._callback is None:
+            self._callback = CallbackHandler(
+                tags=[AppConfig.APP_NAME],
+                user_id=str(self.user_id),
+                session_id=self.session_id,
+                host=AppConfig.LANGFUSE_ENDPOINT,
+                secret_key=AppConfig.LANGFUSE_SECRET_KEY,
+                public_key=AppConfig.LANGFUSE_PUBLIC_KEY,
+                # debug=True # Enable debug mode for detailed logging
+            )
+        return self._callback
+    
     @property
     def memory(self):
         if self._memory is None:
-            session_id = (
-                self.session_id
-                or f"{self.user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            )
 
             if self.type_memory == "file":
                 # File-based memory
                 file_chat_history = FileChatMessageHistory(
-                    file_path=session_id + ".json"
+                    file_path=self.session_id + ".json"
                 )
                 self._memory = ConversationBufferWindowMemory(
                     chat_memory=file_chat_history,
@@ -71,7 +85,9 @@ class HospitalRAGAgent:
             else:
                 # Redis-based memory
                 message_history = RedisChatMessageHistory(
-                    session_id=session_id, url=AppConfig.REDIS_URL, ttl=AppConfig.TTL
+                    session_id=self.session_id, 
+                    url=AppConfig.REDIS_URL, 
+                    ttl=AppConfig.TTL
                 )
                 self._memory = ConversationBufferWindowMemory(
                     chat_memory=message_history,
@@ -106,7 +122,8 @@ class HospitalRAGAgent:
             self._tools = [
                 CypherTool(llm_model=self.llm_model),
                 ReviewTool(
-                    llm_model=self.llm_model, embedding_model=self.embedding_model
+                    llm_model=self.llm_model, 
+                    embedding_model=self.embedding_model
                 ),
                 DSM5RetrievalTool(embedding_model=self.embedding_model),
                 Tool(
@@ -138,11 +155,11 @@ class HospitalRAGAgent:
                 prompt=self.prompt,
                 tools=self.tools,
             )
-
             self._agent_executor = AgentExecutor(
                 agent=agent,
                 tools=self.tools,
                 memory=self.memory,
+                callbacks=[self.callbacks],
                 return_intermediate_steps=True,
                 verbose=False,
             )
@@ -171,6 +188,8 @@ class HospitalRAGAgent:
         """
         try:
             result = self.agent_executor.invoke({"input": query})
+
+            self.callbacks.flush()
             return self._extract_metadata(result)
         except Exception as e:
             logger.error(f"Error in invoke: {e}")
@@ -188,6 +207,7 @@ class HospitalRAGAgent:
         """
         try:
             result = await self.agent_executor.ainvoke({"input": query})
+            self.callbacks.flush()
             return self._extract_metadata(result)
         except Exception as e:
             logger.error(f"Error in ainvoke: {e}")
@@ -296,6 +316,7 @@ class HospitalRAGAgent:
 
 
 if __name__ == "__main__":
+    # python -m agents.hospital_rag_agent
     # Test with class instance
     agent = HospitalRAGAgent(
         llm_model="openai", embedding_model="openai", user_id=1, type_memory="file"

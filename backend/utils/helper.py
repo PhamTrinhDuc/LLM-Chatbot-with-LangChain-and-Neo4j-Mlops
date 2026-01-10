@@ -1,7 +1,7 @@
 import asyncio
 import json
-from typing import Literal
-from langchain.callbacks.base import BaseCallbackHandler
+from typing import Literal, Union, List
+from langfuse.callback import CallbackHandler
 from utils.config import AppConfig
 from utils.logging import logger
 
@@ -40,7 +40,14 @@ def async_retry(max_retries: int = 3, delay: int = 1):
 
 class ModelFactory:
     @staticmethod
-    def get_llm_model(llm_model: Literal["google", "openai", "groq"] = "google"):
+    def get_llm_model(llm_model: Literal["google", "openai", "groq"] = "google",
+                      callbacks: Union[CallbackHandler, List[CallbackHandler], None] = None):
+        
+        if callbacks is None: 
+            callbacks = []
+        elif not isinstance(callbacks, list):
+            callbacks = [callbacks]
+        
         try:
             if llm_model == "google":
                 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -49,6 +56,7 @@ class ModelFactory:
                     model=AppConfig.GOOGLE_LLM,
                     temperature=AppConfig.TEMPERATURE,
                     api_key=AppConfig.GOOGLE_API_KEY,
+                    callbacks=callbacks
                 )
             elif llm_model == "openai":
                 from langchain_openai import ChatOpenAI
@@ -57,6 +65,7 @@ class ModelFactory:
                     model=AppConfig.OPENAI_LLM,
                     temperature=AppConfig.TEMPERATURE,
                     api_key=AppConfig.OPENAI_API_KEY,
+                    callbacks=callbacks
                 )
             else:
                 from langchain_groq import ChatGroq
@@ -65,6 +74,7 @@ class ModelFactory:
                     model=AppConfig.GROQ_LLM,
                     temperature=AppConfig.TEMPERATURE,
                     api_key=AppConfig.GROQ_API_KEY,
+                    callbacks=callbacks
                 )
 
             return llm
@@ -72,6 +82,7 @@ class ModelFactory:
         except Exception as e:
             logger.error(f"Error initializing model {llm_model}: {str(e)}")
             raise ValueError(f"Error initializing model {llm_model}: {str(e)}")
+
 
     @staticmethod
     def get_embedding_model(embedding_model: Literal["google", "openai"] = "openai"):

@@ -13,7 +13,8 @@ ENV_PATH = BACKEND_DIR / ".env.dev"
 PROJET_ROOT = BACKEND_DIR.parent
 
 load_dotenv(ENV_PATH)
-
+# os.environ["LANGFUSE_PUBLIC_KEY"] = os.getenv("LANGFUSE_PUBLIC_KEY")
+# os.environ["LANGFUSE_SECRET_KEY"] = os.getenv("LANGFUSE_SECRET_KEY")
 
 @dataclass
 class AppConfig:
@@ -45,6 +46,10 @@ class AppConfig:
     ELS_PORT: str = os.getenv("ELS_PORT")
 
     JAEGER_ENDPOINT = os.getenv("JAEGER_ENDPOINT")
+
+    LANGFUSE_SECRET_KEY: str = os.getenv("LANGFUSE_SECRET_KEY")
+    LANGFUSE_PUBLIC_KEY: str = os.getenv("LANGFUSE_PUBLIC_KEY")
+    LANGFUSE_ENDPOINT: str = os.getenv("LANGFUSE_ENDPOINT")
 
     # PARAMETERS
     VECTOR_SIZE: int = 768
